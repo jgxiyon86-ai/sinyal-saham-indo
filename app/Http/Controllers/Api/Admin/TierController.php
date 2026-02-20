@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Http\Controllers\Api\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Tier;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class TierController extends Controller
+{
+    public function index(): JsonResponse
+    {
+        return response()->json([
+            'tiers' => Tier::query()->orderBy('min_capital')->get(),
+        ]);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'min_capital' => ['required', 'numeric', 'min:0'],
+            'max_capital' => ['nullable', 'numeric', 'gte:min_capital'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $tier = Tier::create($data);
+
+        return response()->json([
+            'message' => 'Tier berhasil dibuat.',
+            'tier' => $tier,
+        ], 201);
+    }
+
+    public function show(Tier $tier): JsonResponse
+    {
+        return response()->json([
+            'tier' => $tier->loadCount('clients'),
+        ]);
+    }
+
+    public function update(Request $request, Tier $tier): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'min_capital' => ['required', 'numeric', 'min:0'],
+            'max_capital' => ['nullable', 'numeric', 'gte:min_capital'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $tier->update($data);
+
+        return response()->json([
+            'message' => 'Tier berhasil diupdate.',
+            'tier' => $tier,
+        ]);
+    }
+
+    public function destroy(Tier $tier): JsonResponse
+    {
+        if ($tier->clients()->exists()) {
+            return response()->json([
+                'message' => 'Tier masih dipakai client, tidak bisa dihapus.',
+            ], 422);
+        }
+
+        $tier->delete();
+
+        return response()->json([
+            'message' => 'Tier berhasil dihapus.',
+        ]);
+    }
+}
