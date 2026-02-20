@@ -31,7 +31,7 @@
     <div class="table-wrap">
         <table>
             <thead>
-            <tr><th>Judul</th><th>Kode</th><th>Tipe</th><th>Tier</th><th>Publikasi</th><th>Berlaku Sampai</th><th>Aksi</th></tr>
+            <tr><th>Judul</th><th>Kode</th><th>Tipe</th><th>Tier</th><th>Publikasi</th><th>Status Push</th><th>Berlaku Sampai</th><th>Aksi</th></tr>
             </thead>
             <tbody>
             @forelse($signals as $signal)
@@ -41,6 +41,17 @@
                     <td>{{ strtoupper($signal->signal_type) }}</td>
                     <td>{{ $signal->tiers->pluck('name')->implode(', ') }}</td>
                     <td>{{ optional($signal->published_at)->format('Y-m-d H:i') }}</td>
+                    <td>
+                        @if($signal->expires_at && $signal->expires_at->isPast())
+                            <span class="badge badge-muted">Expired</span>
+                        @elseif($signal->push_sent_at)
+                            <span class="badge badge-success">Sudah Dipush</span>
+                        @elseif($signal->published_at && $signal->published_at->isFuture())
+                            <span class="badge badge-info">Terjadwal</span>
+                        @else
+                            <span class="badge badge-warn">Menunggu Push</span>
+                        @endif
+                    </td>
                     <td>{{ optional($signal->expires_at)->format('Y-m-d H:i') ?? '-' }}</td>
                     <td>
                         <div class="actions">
@@ -54,7 +65,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7">Belum ada sinyal.</td></tr>
+                <tr><td colspan="8">Belum ada sinyal.</td></tr>
             @endforelse
             </tbody>
         </table>

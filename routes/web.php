@@ -25,6 +25,7 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::get('/clients/{client}/edit', [ClientPageController::class, 'edit'])->name('clients.edit');
     Route::post('/clients', [ClientPageController::class, 'store'])->name('clients.store');
     Route::put('/clients/{client}', [ClientPageController::class, 'update'])->name('clients.update');
+    Route::post('/clients/{client}/send-credentials', [ClientPageController::class, 'sendCredentials'])->name('clients.send-credentials');
     Route::delete('/clients/{client}', [ClientPageController::class, 'destroy'])->name('clients.destroy');
 
     Route::get('/tiers', [TierPageController::class, 'index'])->name('tiers.page');

@@ -26,6 +26,9 @@ class AuthController extends Controller
             return response()->json(['message' => 'Akun tidak aktif.'], 403);
         }
 
+        // Single-device login: hapus semua token lama sebelum buat token baru.
+        $user->tokens()->delete();
+
         $token = $user->createToken('mobile-token')->plainTextToken;
 
         return response()->json([
@@ -43,6 +46,9 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        $request->user()->update([
+            'fcm_token' => null,
+        ]);
         $request->user()->currentAccessToken()?->delete();
 
         return response()->json([

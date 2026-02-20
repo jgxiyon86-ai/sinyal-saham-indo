@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.alima.sinyalsahamindo.data.SignalRepository
+import com.alima.sinyalsahamindo.data.UnauthorizedException
 import com.alima.sinyalsahamindo.util.AlertHelper
 import com.alima.sinyalsahamindo.util.SessionManager
 
@@ -24,6 +25,9 @@ class SignalSyncWorker(
             val newSignals = signals.filter { it.id > lastId }.sortedBy { it.id }
             newSignals.forEach { AlertHelper.hardAlert(applicationContext, it) }
             signals.maxOfOrNull { it.id }?.let { sessionManager.saveLastSignalId(it) }
+            Result.success()
+        } catch (_: UnauthorizedException) {
+            sessionManager.clear()
             Result.success()
         } catch (_: Exception) {
             Result.retry()

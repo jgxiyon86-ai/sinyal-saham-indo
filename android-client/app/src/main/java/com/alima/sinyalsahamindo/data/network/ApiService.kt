@@ -18,6 +18,9 @@ interface ApiService {
     @GET("client/signals")
     suspend fun getSignals(@Header("Authorization") bearerToken: String): Response<SignalResponse>
 
+    @POST("auth/logout")
+    suspend fun logout(@Header("Authorization") bearerToken: String): Response<Map<String, Any>>
+
     @FormUrlEncoded
     @POST("auth/fcm-token")
     suspend fun updateFcmToken(

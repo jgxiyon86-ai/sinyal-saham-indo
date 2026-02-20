@@ -61,13 +61,13 @@ class AppFirebaseMessagingService : FirebaseMessagingService() {
         fun parseSignal(data: Map<String, String>, message: RemoteMessage? = null): SignalItem {
             return SignalItem(
                 id = data["id"]?.toIntOrNull() ?: (System.currentTimeMillis() / 1000L).toInt(),
-                title = data["title"] ?: message?.notification?.title,
+                title = data["title"] ?: data["notif_title"] ?: message?.notification?.title,
                 stock_code = data["stock_code"] ?: "",
                 signal_type = data["signal_type"] ?: "hold",
                 entry_price = data["entry_price"],
                 take_profit = data["take_profit"],
                 stop_loss = data["stop_loss"],
-                note = data["note"] ?: message?.notification?.body,
+                note = data["note"] ?: data["notif_body"] ?: message?.notification?.body,
                 published_at = data["published_at"]
             )
         }

@@ -3,9 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light only">
     <title>Login Admin - Sinyal Saham Indo</title>
     <style>
         :root {
+            color-scheme: only light;
             --bg: #0d3b78;
             --panel: #0a4f9e;
             --panel2: #0d63be;

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Signal;
 use App\Models\Tier;
-use App\Services\FcmService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,10 +15,6 @@ use Throwable;
 
 class SignalPageController extends Controller
 {
-    public function __construct(private readonly FcmService $fcmService)
-    {
-    }
-
     public function index(Request $request): View
     {
         $query = Signal::query()->with(['tiers', 'creator'])->latest();
@@ -70,22 +65,13 @@ class SignalPageController extends Controller
                 ...$data,
                 'created_by' => $request->user()->id,
                 'published_at' => $data['published_at'] ?? now(),
+                'push_sent_at' => null,
             ]);
             $signal->tiers()->sync($tierIds);
-            $signal->load('tiers');
-            $pushResult = ['sent' => 0, 'failed' => 0];
-            try {
-                $pushResult = $this->fcmService->pushSignalToTierClients($signal);
-            } catch (Throwable $e) {
-                Log::error('Push FCM gagal saat simpan sinyal web', [
-                    'signal_id' => $signal->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
 
             return redirect()->route('signals.page')->with(
                 'status',
-                'Sinyal berhasil ditambahkan. Push terkirim: '.$pushResult['sent'].'; gagal: '.$pushResult['failed'].'.'
+                'Sinyal berhasil ditambahkan. Push akan dikirim otomatis sesuai tanggal publikasi.'
             );
         } catch (ValidationException $e) {
             throw $e;
@@ -107,23 +93,15 @@ class SignalPageController extends Controller
             $tierIds = $this->resolveTierIds($data['tier_target']);
             unset($data['tier_target']);
 
-            $signal->update($data);
+            $signal->update([
+                ...$data,
+                'push_sent_at' => null,
+            ]);
             $signal->tiers()->sync($tierIds);
-            $signal->load('tiers');
-
-            $pushResult = ['sent' => 0, 'failed' => 0];
-            try {
-                $pushResult = $this->fcmService->pushSignalToTierClients($signal);
-            } catch (Throwable $e) {
-                Log::error('Push FCM gagal saat update sinyal web', [
-                    'signal_id' => $signal->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
 
             return redirect()->route('signals.page')->with(
                 'status',
-                'Sinyal berhasil diupdate. Push terkirim: '.$pushResult['sent'].'; gagal: '.$pushResult['failed'].'.'
+                'Sinyal berhasil diupdate. Push dijadwalkan ulang sesuai tanggal publikasi.'
             );
         } catch (ValidationException $e) {
             throw $e;

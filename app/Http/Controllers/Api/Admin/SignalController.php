@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Signal;
 use App\Models\Tier;
-use App\Services\FcmService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -13,10 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class SignalController extends Controller
 {
-    public function __construct(private readonly FcmService $fcmService)
-    {
-    }
-
     public function index(): JsonResponse
     {
         return response()->json([
@@ -51,16 +46,14 @@ class SignalController extends Controller
             ...$data,
             'created_by' => $request->user()->id,
             'published_at' => $data['published_at'] ?? now(),
+            'push_sent_at' => null,
         ]);
 
         $signal->tiers()->sync($tierIds);
-        $signal->load('tiers');
-        $pushResult = $this->fcmService->pushSignalToTierClients($signal);
 
         return response()->json([
             'message' => 'Signal berhasil dibuat.',
             'signal' => $signal->load(['tiers:id,name', 'creator:id,name']),
-            'push_result' => $pushResult,
         ], 201);
     }
 
@@ -91,15 +84,15 @@ class SignalController extends Controller
         $tierIds = $this->resolveTierIdsFromPayload($data);
         unset($data['tier_ids'], $data['tier_target']);
 
-        $signal->update($data);
+        $signal->update([
+            ...$data,
+            'push_sent_at' => null,
+        ]);
         $signal->tiers()->sync($tierIds);
-        $signal->load('tiers');
-        $pushResult = $this->fcmService->pushSignalToTierClients($signal);
 
         return response()->json([
             'message' => 'Signal berhasil diupdate.',
             'signal' => $signal->load(['tiers:id,name', 'creator:id,name']),
-            'push_result' => $pushResult,
         ]);
     }
 

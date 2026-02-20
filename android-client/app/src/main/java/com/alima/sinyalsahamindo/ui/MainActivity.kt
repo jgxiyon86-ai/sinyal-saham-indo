@@ -9,20 +9,18 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+import com.alima.sinyalsahamindo.data.UnauthorizedException
 import com.alima.sinyalsahamindo.data.SignalRepository
 import com.alima.sinyalsahamindo.data.model.SignalItem
+import com.alima.sinyalsahamindo.data.network.RetrofitProvider
 import com.alima.sinyalsahamindo.databinding.ActivityMainBinding
 import com.alima.sinyalsahamindo.push.AppFirebaseMessagingService
 import com.alima.sinyalsahamindo.util.AlertHelper
 import com.alima.sinyalsahamindo.util.SessionManager
-import com.alima.sinyalsahamindo.worker.SignalSyncWorker
+import com.alima.sinyalsahamindo.worker.SignalWorkScheduler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -89,8 +87,14 @@ class MainActivity : AppCompatActivity() {
             )
         }
         binding.btnLogout.setOnClickListener {
-            sessionManager.clear()
-            goToLogin()
+            lifecycleScope.launch {
+                val bearer = sessionManager.getToken()
+                if (!bearer.isNullOrBlank()) {
+                    runCatching { RetrofitProvider.api.logout("Bearer $bearer") }
+                }
+                sessionManager.clear()
+                goToLogin()
+            }
         }
 
         scheduleBackgroundSync()
@@ -133,6 +137,8 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     signals.maxOfOrNull { it.id }?.let { sessionManager.saveLastSignalId(it) }
                 }
+            } catch (_: UnauthorizedException) {
+                forceLogout("Sesi berakhir. Akun dipakai di perangkat lain.")
             } catch (_: Exception) {
             } finally {
                 binding.swipeRefresh.isRefreshing = false
@@ -157,16 +163,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun scheduleBackgroundSync() {
-        val request = PeriodicWorkRequestBuilder<SignalSyncWorker>(15, TimeUnit.MINUTES).build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "signal_sync",
-            ExistingPeriodicWorkPolicy.UPDATE,
-            request
-        )
+        SignalWorkScheduler.schedule(this)
     }
 
     private fun goToLogin() {
         startActivity(Intent(this, LoginActivity::class.java))
+        finish()
+    }
+
+    private fun forceLogout(message: String) {
+        sessionManager.clear()
+        val intent = Intent(this, LoginActivity::class.java).apply {
+            putExtra("forced_logout_message", message)
+        }
+        startActivity(intent)
         finish()
     }
 

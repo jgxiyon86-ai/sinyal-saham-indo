@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ClientCredentialsMail;
 use App\Models\Tier;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Throwable;
 
 class ClientPageController extends Controller
 {
@@ -76,15 +81,23 @@ class ClientPageController extends Controller
     {
         $data = $this->validatedData($request);
         $tier = $this->findTierByCapital((float) $data['capital_amount']);
+        $plainPassword = $data['password'];
 
-        User::create([
+        $client = User::create([
             ...$data,
             'role' => 'client',
             'tier_id' => $tier?->id,
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        return redirect()->route('clients.page')->with('status', 'Klient berhasil ditambahkan.');
+        $status = 'Klient berhasil ditambahkan.';
+        if ($request->boolean('send_email_credentials', true)) {
+            $status .= $this->trySendCredentialsEmail($client, $plainPassword)
+                ? ' Email kredensial berhasil dikirim.'
+                : ' Klient tersimpan, tapi email kredensial gagal dikirim.';
+        }
+
+        return redirect()->route('clients.page')->with('status', $status);
     }
 
     public function update(Request $request, User $client): RedirectResponse
@@ -92,6 +105,7 @@ class ClientPageController extends Controller
         abort_unless($client->role === 'client', 404);
 
         $data = $this->validatedData($request, $client->id);
+        $plainPassword = $data['password'] ?? null;
         if (empty($data['password'])) {
             unset($data['password']);
         }
@@ -102,7 +116,14 @@ class ClientPageController extends Controller
 
         $client->update($data);
 
-        return redirect()->route('clients.page')->with('status', 'Data klient berhasil diupdate.');
+        $status = 'Data klient berhasil diupdate.';
+        if (! empty($plainPassword) && $request->boolean('send_email_credentials')) {
+            $status .= $this->trySendCredentialsEmail($client, $plainPassword)
+                ? ' Email kredensial berhasil dikirim.'
+                : ' Data tersimpan, tapi email kredensial gagal dikirim.';
+        }
+
+        return redirect()->route('clients.page')->with('status', $status);
     }
 
     public function destroy(User $client): RedirectResponse
@@ -111,6 +132,21 @@ class ClientPageController extends Controller
         $client->delete();
 
         return redirect()->route('clients.page')->with('status', 'Klient berhasil dihapus.');
+    }
+
+    public function sendCredentials(User $client): RedirectResponse
+    {
+        abort_unless($client->role === 'client', 404);
+
+        $temporaryPassword = $this->generateTemporaryPassword();
+        $client->update(['password' => $temporaryPassword]);
+
+        $ok = $this->trySendCredentialsEmail($client, $temporaryPassword);
+        $status = $ok
+            ? 'Password baru dibuat dan email kredensial berhasil dikirim.'
+            : 'Password baru sudah dibuat, tapi email gagal dikirim.';
+
+        return redirect()->route('clients.page')->with('status', $status);
     }
 
     private function validatedData(Request $request, ?int $ignoreUserId = null): array
@@ -137,5 +173,25 @@ class ClientPageController extends Controller
             })
             ->orderByDesc('min_capital')
             ->first();
+    }
+
+    private function trySendCredentialsEmail(User $client, string $plainPassword): bool
+    {
+        try {
+            Mail::to($client->email)->send(new ClientCredentialsMail($client, $plainPassword));
+            return true;
+        } catch (Throwable $e) {
+            Log::error('Gagal kirim email kredensial klient', [
+                'client_id' => $client->id,
+                'email' => $client->email,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    private function generateTemporaryPassword(): string
+    {
+        return Str::upper(Str::random(4)).random_int(1000, 9999);
     }
 }

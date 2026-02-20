@@ -37,6 +37,10 @@
                         <option value="0" @selected(!old('is_active', $client->is_active ?? true))>Nonaktif</option>
                     </select>
                 </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:26px;">
+                    <input id="send_email_credentials" type="checkbox" name="send_email_credentials" value="1" style="width:auto;" @checked(old('send_email_credentials', $client ? false : true))>
+                    <label for="send_email_credentials" style="margin:0;">Kirim email username & password</label>
+                </div>
                 <div style="grid-column:1/-1;"><label>Alamat</label><textarea name="address">{{ old('address', $client->address ?? '') }}</textarea></div>
             </div>
             <div style="margin-top:10px;display:flex;gap:8px;">

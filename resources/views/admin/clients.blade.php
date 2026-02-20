@@ -65,6 +65,10 @@
                     <td>
                         <div class="actions">
                             <a class="btn btn-muted" href="{{ route('clients.edit', $client) }}" style="text-decoration:none;">Edit</a>
+                            <form method="POST" action="{{ route('clients.send-credentials', $client) }}" onsubmit="return confirm('Kirim password baru ke email klient ini?')">
+                                @csrf
+                                <button class="btn" type="submit">Kirim Kredensial</button>
+                            </form>
                             <form method="POST" action="{{ route('clients.destroy', $client) }}" onsubmit="return confirm('Hapus klient ini?')">
                                 @csrf
                                 @method('DELETE')

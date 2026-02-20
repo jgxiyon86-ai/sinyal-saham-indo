@@ -54,6 +54,11 @@ class FcmService
         $legacyUrl = (string) config('services.fcm.url');
         $projectId = (string) config('services.fcm.project_id');
         $serviceAccountPath = (string) config('services.fcm.service_account_json');
+        $data = [
+            'notif_title' => $title,
+            'notif_body' => $body,
+            ...$data,
+        ];
 
         $usersQuery = User::query()
             ->where('role', 'client')
@@ -105,16 +110,12 @@ class FcmService
             $response = $useV1
                 ? $this->sendViaV1(
                     token: $user->fcm_token,
-                    title: $title,
-                    body: $body,
                     data: $data,
                     projectId: $projectId,
                     accessToken: (string) $accessToken,
                 )
                 : $this->sendViaLegacy(
                     token: $user->fcm_token,
-                    title: $title,
-                    body: $body,
                     data: $data,
                     serverKey: $serverKey,
                     url: $legacyUrl,
@@ -143,8 +144,6 @@ class FcmService
 
     private function sendViaLegacy(
         string $token,
-        string $title,
-        string $body,
         array $data,
         string $serverKey,
         string $url,
@@ -154,10 +153,6 @@ class FcmService
             'Content-Type' => 'application/json',
         ])->post($url, [
             'to' => $token,
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
-            ],
             'data' => $this->stringifyData($data),
             'priority' => 'high',
         ]);
@@ -165,8 +160,6 @@ class FcmService
 
     private function sendViaV1(
         string $token,
-        string $title,
-        string $body,
         array $data,
         string $projectId,
         string $accessToken,
@@ -178,10 +171,6 @@ class FcmService
             ->post($url, [
                 'message' => [
                     'token' => $token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body,
-                    ],
                     'data' => $this->stringifyData($data),
                     'android' => [
                         'priority' => 'high',

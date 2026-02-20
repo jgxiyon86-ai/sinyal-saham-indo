@@ -19,6 +19,7 @@ class Signal extends Model
         'note',
         'published_at',
         'expires_at',
+        'push_sent_at',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class Signal extends Model
             'stop_loss' => 'decimal:2',
             'published_at' => 'datetime',
             'expires_at' => 'datetime',
+            'push_sent_at' => 'datetime',
         ];
     }
 

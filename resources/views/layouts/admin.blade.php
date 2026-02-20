@@ -3,9 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light only">
     <title>@yield('title', 'Admin Panel') - Sinyal Saham Indo</title>
     <style>
         :root {
+            color-scheme: only light;
             --bg: #eaf4ff;
             --sidebar: #0b4ea2;
             --sidebar-muted: #d8e9ff;
@@ -146,6 +148,19 @@
         }
         th { background: #edf6ff; color: #376089; }
         .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        .badge-info { background: #e0f2ff; color: #0e5ca8; border: 1px solid #b8ddff; }
+        .badge-warn { background: #fff4d6; color: #8a5b00; border: 1px solid #f2d38b; }
+        .badge-success { background: #dcfce7; color: #166534; border: 1px solid #a7f3d0; }
+        .badge-muted { background: #e5e7eb; color: #374151; border: 1px solid #d1d5db; }
         .pagination { margin-top: 10px; }
         .footer {
             color: var(--muted);

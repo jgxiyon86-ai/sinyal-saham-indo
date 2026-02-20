@@ -15,7 +15,9 @@ import com.alima.sinyalsahamindo.push.AppFirebaseMessagingService
 import com.alima.sinyalsahamindo.databinding.ActivityLoginBinding
 import com.alima.sinyalsahamindo.util.AlertHelper
 import com.alima.sinyalsahamindo.util.SessionManager
+import com.alima.sinyalsahamindo.worker.SignalWorkScheduler
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -48,6 +50,10 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.setOnClickListener {
             login()
         }
+
+        intent.getStringExtra("forced_logout_message")?.let { msg ->
+            showError(msg)
+        }
     }
 
     private fun login() {
@@ -76,13 +82,17 @@ class LoginActivity : AppCompatActivity() {
                             } catch (_: Exception) {
                             }
                         }
+                        SignalWorkScheduler.schedule(this@LoginActivity)
                         startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                         finish()
                     } else {
                         showError("Token login tidak ditemukan.")
                     }
                 } else {
-                    showError("Login gagal. Cek akun client.")
+                    val msg = runCatching {
+                        JSONObject(response.errorBody()?.string().orEmpty()).optString("message")
+                    }.getOrNull().orEmpty()
+                    showError(msg.ifBlank { "Login gagal. Cek akun client." })
                 }
             } catch (e: Exception) {
                 showError("Gagal konek ke server: ${e.message}")
