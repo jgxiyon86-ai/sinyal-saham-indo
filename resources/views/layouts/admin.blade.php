@@ -33,7 +33,9 @@
             color: #fff;
             padding: 22px 16px;
         }
-        .brand { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .brand-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .brand-logo { width: 34px; height: 34px; border-radius: 10px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
+        .brand { font-size: 18px; font-weight: 700; margin: 0; line-height: 1.2; }
         .tagline { font-size: 12px; color: var(--sidebar-muted); margin-bottom: 18px; }
         .menu { display: grid; gap: 8px; }
         .menu a {
@@ -184,7 +186,10 @@
 <body>
 <div class="app">
     <aside class="sidebar">
-        <div class="brand">Sinyal Saham Indo</div>
+        <div class="brand-wrap">
+            <img class="brand-logo" src="{{ asset('assets/sinyal-saham-logo.svg') }}" alt="Sinyal Saham Indo">
+            <div class="brand">Sinyal Saham Indo</div>
+        </div>
         <div class="tagline">Admin Backend Panel</div>
         <nav class="menu">
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>

@@ -36,6 +36,24 @@
             padding: 28px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         }
+        .brand-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+        }
+        .brand-title {
+            font-size: 16px;
+            margin: 0;
+            font-weight: 700;
+            color: #dff1ff;
+        }
         h1 { margin: 0 0 6px; font-size: 24px; }
         p { margin: 0 0 20px; color: var(--muted); }
         label { display: block; margin: 14px 0 6px; font-size: 14px; color: var(--muted); }
@@ -83,6 +101,10 @@
 </head>
 <body>
 <main class="card">
+    <div class="brand-wrap">
+        <img class="brand-logo" src="{{ asset('assets/sinyal-saham-logo.svg') }}" alt="Sinyal Saham Indo">
+        <p class="brand-title">Sinyal Saham Indo</p>
+    </div>
     <h1>Admin Login</h1>
     <p>Sinyal Saham Indo Backend</p>
 
