@@ -13,10 +13,10 @@
 - Firebase Cloud Messaging receiver siap pakai
 
 ## Base URL
-Sudah diset untuk emulator:
-- `http://10.0.2.2:8082/api/`
+Default sekarang langsung ke server production:
+- `https://sinyal.cuanholic.com/api/`
 
-Jika di device fisik, ganti `BASE_URL` di `app/build.gradle.kts` ke IP server.
+Jika ingin debug lokal di emulator/device, ganti `BASE_URL` di `app/build.gradle.kts` ke IP lokal.
 
 ## Jalankan (Android Studio)
 1. Buka folder `android-client` di Android Studio.
