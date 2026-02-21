@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\MessageTemplatePageController;
 use App\Http\Controllers\Web\PushPageController;
 use App\Http\Controllers\Web\SignalPageController;
+use App\Http\Controllers\Web\SignalWaBlastPageController;
 use App\Http\Controllers\Web\TierPageController;
 use App\Http\Controllers\Web\WaBlastPageController;
 use App\Http\Controllers\Web\LoginThemePageController;
@@ -54,6 +55,9 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::post('/wa-blast/preview', [WaBlastPageController::class, 'preview'])->name('wa-blast.preview');
     Route::post('/wa-blast/send', [WaBlastPageController::class, 'send'])->name('wa-blast.send');
     Route::post('/wa-blast/manual-send', [WaBlastPageController::class, 'manualSend'])->name('wa-blast.manual-send');
+    Route::get('/wa-blast-sinyal', [SignalWaBlastPageController::class, 'index'])->name('signal-wa-blast.page');
+    Route::post('/wa-blast-sinyal/preview', [SignalWaBlastPageController::class, 'preview'])->name('signal-wa-blast.preview');
+    Route::post('/wa-blast-sinyal/send', [SignalWaBlastPageController::class, 'send'])->name('signal-wa-blast.send');
     Route::get('/push-broadcast', [PushPageController::class, 'index'])->name('push.page');
     Route::post('/push-broadcast', [PushPageController::class, 'send'])->name('push.send');
     Route::get('/login-theme', [LoginThemePageController::class, 'index'])->name('login-theme.page');

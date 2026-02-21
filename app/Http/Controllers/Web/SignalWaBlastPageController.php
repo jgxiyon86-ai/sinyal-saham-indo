@@ -1,0 +1,235 @@
+<?php
+
+namespace App\Http\Controllers\Web;
+
+use App\Http\Controllers\Controller;
+use App\Models\Signal;
+use App\Models\Tier;
+use App\Models\User;
+use App\Models\WaBlastLog;
+use App\Services\FonnteService;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\View\View;
+use RuntimeException;
+
+class SignalWaBlastPageController extends Controller
+{
+    public function __construct(private readonly FonnteService $fonnteService)
+    {
+    }
+
+    public function index(): View
+    {
+        return view('admin.signal-wa-blast', [
+            'signals' => $this->availableSignals(),
+            'tiers' => Tier::query()->orderBy('min_capital')->get(),
+            'preview' => null,
+            'selectedSignalIds' => [],
+            'selectedTierId' => null,
+            'settings' => [
+                'delay_seconds' => 12,
+                'max_recipients' => 40,
+                'opening_text' => 'Halo {name}, berikut update sinyal saham kamu hari ini:',
+                'closing_text' => 'Gunakan manajemen risiko. Bukan ajakan beli/jual.',
+                'image_url' => '',
+            ],
+            'logs' => WaBlastLog::with('admin')->where('blast_type', 'signal-batch')->latest()->paginate(20),
+        ]);
+    }
+
+    public function preview(Request $request): View
+    {
+        [$payload, $targets] = $this->buildPayload($request);
+
+        return view('admin.signal-wa-blast', [
+            'signals' => $this->availableSignals(),
+            'tiers' => Tier::query()->orderBy('min_capital')->get(),
+            'preview' => $targets,
+            'selectedSignalIds' => $payload['signal_ids'],
+            'selectedTierId' => $payload['tier_id'],
+            'settings' => [
+                'delay_seconds' => $payload['delay_seconds'],
+                'max_recipients' => $payload['max_recipients'],
+                'opening_text' => $payload['opening_text'],
+                'closing_text' => $payload['closing_text'],
+                'image_url' => $payload['image_url'] ?? '',
+            ],
+            'logs' => WaBlastLog::with('admin')->where('blast_type', 'signal-batch')->latest()->paginate(20),
+        ]);
+    }
+
+    public function send(Request $request): RedirectResponse
+    {
+        [$payload, $targets] = $this->buildPayload($request);
+
+        if ((string) config('services.alima_gateway.app_api_key') === '') {
+            return redirect()->route('signal-wa-blast.page')
+                ->with('status', 'ALIMA_GATEWAY_APP_API_KEY belum diisi di file .env');
+        }
+
+        if ((string) config('services.alima_gateway.session_id') === '') {
+            return redirect()->route('signal-wa-blast.page')
+                ->with('status', 'ALIMA_GATEWAY_SESSION_ID belum diisi di file .env');
+        }
+
+        if ($targets->isEmpty()) {
+            return redirect()->route('signal-wa-blast.page')->with('status', 'Tidak ada target blast.');
+        }
+
+        $delaySeconds = (int) $payload['delay_seconds'];
+        $results = [];
+        $success = 0;
+        $failed = 0;
+        $targetsCount = $targets->count();
+
+        foreach ($targets as $index => $target) {
+            try {
+                $response = $this->fonnteService->sendMessage(
+                    (string) $target['whatsapp_number'],
+                    (string) $target['message'],
+                    $payload['image_url'] ?: null
+                );
+                $success++;
+                $results[] = [
+                    ...$target,
+                    'status' => 'sent',
+                    'response' => $response,
+                ];
+            } catch (RuntimeException $e) {
+                $failed++;
+                $results[] = [
+                    ...$target,
+                    'status' => 'failed',
+                    'response' => $e->getMessage(),
+                ];
+            }
+
+            if ($index < ($targetsCount - 1) && $delaySeconds > 0) {
+                sleep($delaySeconds);
+            }
+        }
+
+        WaBlastLog::create([
+            'admin_id' => $request->user()->id,
+            'message_template_id' => null,
+            'blast_type' => 'signal-batch',
+            'filters' => [
+                'tier_id' => $payload['tier_id'],
+                'signal_ids' => $payload['signal_ids'],
+                'delay_seconds' => $payload['delay_seconds'],
+                'max_recipients' => $payload['max_recipients'],
+            ],
+            'recipients_count' => $targetsCount,
+            'rendered_messages' => collect($results)->toJson(),
+            'status' => $failed > 0 ? 'partial' : 'sent',
+            'blasted_at' => now(),
+        ]);
+
+        return redirect()->route('signal-wa-blast.page')
+            ->with('status', "WA Blast Sinyal selesai. Berhasil: {$success}, Gagal: {$failed}, Delay: {$delaySeconds} detik.");
+    }
+
+    private function availableSignals(): Collection
+    {
+        $now = now();
+
+        return Signal::query()
+            ->with('tiers:id,name')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', $now)
+            ->where(function ($query) use ($now) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', $now);
+            })
+            ->latest('published_at')
+            ->limit(120)
+            ->get();
+    }
+
+    /**
+     * @return array{0: array, 1: \Illuminate\Support\Collection}
+     */
+    private function buildPayload(Request $request): array
+    {
+        $data = $request->validate([
+            'signal_ids' => ['required', 'array', 'min:1'],
+            'signal_ids.*' => ['required', 'integer', 'exists:signals,id'],
+            'tier_id' => ['nullable', 'integer', 'exists:tiers,id'],
+            'delay_seconds' => ['nullable', 'integer', 'min:3', 'max:120'],
+            'max_recipients' => ['nullable', 'integer', 'min:1', 'max:300'],
+            'opening_text' => ['nullable', 'string', 'max:300'],
+            'closing_text' => ['nullable', 'string', 'max:300'],
+            'image_url' => ['nullable', 'url', 'max:500'],
+        ]);
+
+        $payload = [
+            'signal_ids' => array_values(array_unique(array_map('intval', $data['signal_ids']))),
+            'tier_id' => isset($data['tier_id']) ? (int) $data['tier_id'] : null,
+            'delay_seconds' => (int) ($data['delay_seconds'] ?? 12),
+            'max_recipients' => (int) ($data['max_recipients'] ?? 40),
+            'opening_text' => trim((string) ($data['opening_text'] ?? 'Halo {name}, berikut update sinyal saham kamu hari ini:')),
+            'closing_text' => trim((string) ($data['closing_text'] ?? 'Gunakan manajemen risiko. Bukan ajakan beli/jual.')),
+            'image_url' => (string) ($data['image_url'] ?? ''),
+        ];
+
+        $signals = Signal::query()
+            ->with('tiers:id,name')
+            ->whereIn('id', $payload['signal_ids'])
+            ->get()
+            ->sortByDesc(fn (Signal $signal) => optional($signal->published_at)?->timestamp ?? 0)
+            ->values();
+
+        $clientsQuery = User::query()
+            ->where('role', 'client')
+            ->where('is_active', true)
+            ->whereNotNull('whatsapp_number');
+
+        if (! empty($payload['tier_id'])) {
+            $clientsQuery->where('tier_id', $payload['tier_id']);
+        }
+
+        $clients = $clientsQuery->with('tier:id,name')->limit(1500)->get();
+
+        $targets = $clients->map(function (User $client) use ($signals, $payload) {
+            $matchedSignals = $signals->filter(function (Signal $signal) use ($client) {
+                return $signal->tiers->contains('id', $client->tier_id);
+            })->values();
+
+            if ($matchedSignals->isEmpty()) {
+                return null;
+            }
+
+            $signalLines = $matchedSignals->map(function (Signal $signal) {
+                $type = strtoupper((string) $signal->signal_type);
+                $code = strtoupper((string) $signal->stock_code);
+                $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 2, '.', ',') : '-';
+                $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 2, '.', ',') : '-';
+                $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 2, '.', ',') : '-';
+
+                return "- {$code} {$type} | Entry {$entry} | TP {$tp} | SL {$sl}";
+            })->implode("\n");
+
+            $header = str_replace('{name}', $client->name, $payload['opening_text']);
+            $footer = str_replace('{name}', $client->name, $payload['closing_text']);
+            $message = trim($header)."\n\n".$signalLines."\n\n".trim($footer);
+
+            return [
+                'name' => $client->name,
+                'whatsapp_number' => $client->whatsapp_number,
+                'tier' => optional($client->tier)->name,
+                'signals_count' => $matchedSignals->count(),
+                'signal_ids' => $matchedSignals->pluck('id')->values()->all(),
+                'message' => $message,
+            ];
+        })
+            ->filter()
+            ->take($payload['max_recipients'])
+            ->values();
+
+        return [$payload, $targets];
+    }
+}
+

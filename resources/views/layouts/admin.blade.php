@@ -251,6 +251,7 @@
             <a href="{{ route('signals.page') }}" class="{{ request()->routeIs('signals.*') ? 'active' : '' }}">Sinyal</a>
             <a href="{{ route('templates.page') }}" class="{{ request()->routeIs('templates.*') ? 'active' : '' }}">Template Pesan</a>
             <a href="{{ route('wa-blast.page') }}" class="{{ request()->routeIs('wa-blast.*') ? 'active' : '' }}">WA Blast</a>
+            <a href="{{ route('signal-wa-blast.page') }}" class="{{ request()->routeIs('signal-wa-blast.*') ? 'active' : '' }}">WA Blast Sinyal</a>
             <a href="{{ route('push.page') }}" class="{{ request()->routeIs('push.*') ? 'active' : '' }}">Push Broadcast</a>
             <a href="{{ route('login-theme.page') }}" class="{{ request()->routeIs('login-theme.*') ? 'active' : '' }}">Tema UI</a>
         </nav>
