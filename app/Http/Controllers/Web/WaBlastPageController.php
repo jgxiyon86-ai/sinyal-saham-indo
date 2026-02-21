@@ -11,7 +11,9 @@ use App\Services\FonnteService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
@@ -76,9 +78,14 @@ class WaBlastPageController extends Controller
     {
         [$data, $template, $date, $messages] = $this->buildMessages($request);
 
-        if ((string) config('services.fonnte.token') === '') {
+        if ((string) config('services.alima_gateway.app_api_key') === '') {
             return redirect()->route('wa-blast.page')
-                ->with('status', 'FONNTE_TOKEN belum diisi di file .env');
+                ->with('status', 'ALIMA_GATEWAY_APP_API_KEY belum diisi di file .env');
+        }
+
+        if ((string) config('services.alima_gateway.session_id') === '') {
+            return redirect()->route('wa-blast.page')
+                ->with('status', 'ALIMA_GATEWAY_SESSION_ID belum diisi di file .env');
         }
 
         if ($messages->isEmpty()) {
@@ -91,10 +98,15 @@ class WaBlastPageController extends Controller
 
         foreach ($messages as $item) {
             try {
-                $response = $this->fonnteService->sendMessage((string) $item['whatsapp_number'], (string) $item['message']);
+                $response = $this->fonnteService->sendMessage(
+                    (string) $item['whatsapp_number'],
+                    (string) $item['message'],
+                    $template->image_url
+                );
                 $success++;
                 $results[] = [
                     ...$item,
+                    'image_url' => $template->image_url,
                     'status' => 'sent',
                     'response' => $response,
                 ];
@@ -102,6 +114,7 @@ class WaBlastPageController extends Controller
                 $failed++;
                 $results[] = [
                     ...$item,
+                    'image_url' => $template->image_url,
                     'status' => 'failed',
                     'response' => $e->getMessage(),
                 ];
@@ -131,16 +144,37 @@ class WaBlastPageController extends Controller
     {
         $data = $request->validate([
             'whatsapp_number' => ['required', 'string', 'max:30'],
-            'message' => ['required', 'string'],
+            'message' => ['nullable', 'string'],
+            'image_url' => ['nullable', 'url'],
+            'image_file' => ['nullable', 'image', 'max:4096'],
         ]);
 
-        if ((string) config('services.fonnte.token') === '') {
+        if ((string) config('services.alima_gateway.app_api_key') === '') {
             return redirect()->route('wa-blast.page')
-                ->with('status', 'FONNTE_TOKEN belum diisi di file .env');
+                ->with('status', 'ALIMA_GATEWAY_APP_API_KEY belum diisi di file .env');
+        }
+
+        if ((string) config('services.alima_gateway.session_id') === '') {
+            return redirect()->route('wa-blast.page')
+                ->with('status', 'ALIMA_GATEWAY_SESSION_ID belum diisi di file .env');
+        }
+
+        $resolvedImageUrl = $data['image_url'] ?? null;
+        if ($request->hasFile('image_file')) {
+            $resolvedImageUrl = $this->storeImageAndGetUrl($request->file('image_file'));
+        }
+
+        if (blank($data['message'] ?? null) && blank($resolvedImageUrl)) {
+            return redirect()->route('wa-blast.page')
+                ->with('status', 'Isi pesan atau image URL wajib diisi.');
         }
 
         try {
-            $response = $this->fonnteService->sendMessage($data['whatsapp_number'], $data['message']);
+            $response = $this->fonnteService->sendMessage(
+                $data['whatsapp_number'],
+                (string) ($data['message'] ?? ''),
+                $resolvedImageUrl
+            );
 
             WaBlastLog::create([
                 'admin_id' => $request->user()->id,
@@ -152,7 +186,8 @@ class WaBlastPageController extends Controller
                     [
                         'name' => 'Manual',
                         'whatsapp_number' => $data['whatsapp_number'],
-                        'message' => $data['message'],
+                        'message' => (string) ($data['message'] ?? ''),
+                        'image_url' => $resolvedImageUrl,
                         'status' => 'sent',
                         'response' => $response,
                     ],
@@ -173,7 +208,8 @@ class WaBlastPageController extends Controller
                     [
                         'name' => 'Manual',
                         'whatsapp_number' => $data['whatsapp_number'],
-                        'message' => $data['message'],
+                        'message' => (string) ($data['message'] ?? ''),
+                        'image_url' => $resolvedImageUrl,
                         'status' => 'failed',
                         'response' => $e->getMessage(),
                     ],
@@ -222,6 +258,7 @@ class WaBlastPageController extends Controller
                 'tier' => optional($client->tier)->name,
                 'religion' => $client->religion,
                 'message' => $this->renderTemplate($template->content, $client, $date),
+                'image_url' => $template->image_url,
             ];
         });
 
@@ -246,5 +283,12 @@ class WaBlastPageController extends Controller
             '{tier}' => (string) optional($client->tier)->name,
             '{date}' => $date->toDateString(),
         ]);
+    }
+
+    private function storeImageAndGetUrl(UploadedFile $file): string
+    {
+        $path = $file->store('wa-manual-images', 'public');
+
+        return Storage::disk('public')->url($path);
     }
 }

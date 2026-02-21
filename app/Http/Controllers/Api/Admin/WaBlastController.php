@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Models\WaBlastLog;
+use App\Services\FonnteService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use RuntimeException;
 
 class WaBlastController extends Controller
 {
@@ -124,6 +128,7 @@ class WaBlastController extends Controller
                 'name' => $client->name,
                 'whatsapp_number' => $client->whatsapp_number,
                 'message' => $this->renderTemplate($template->content, $client, $date),
+                'image_url' => $template->image_url,
             ];
         });
 
@@ -147,6 +152,97 @@ class WaBlastController extends Controller
             'recipients_count' => $rendered->count(),
             'messages' => $rendered,
         ]);
+    }
+
+    public function manualSend(Request $request, FonnteService $fonnteService): JsonResponse
+    {
+        $data = $request->validate([
+            'whatsapp_number' => ['required', 'string', 'max:30'],
+            'message' => ['nullable', 'string'],
+            'image_url' => ['nullable', 'url'],
+            'image_file' => ['nullable', 'image', 'max:4096'],
+        ]);
+
+        if ((string) config('services.alima_gateway.app_api_key') === '') {
+            return response()->json([
+                'message' => 'ALIMA_GATEWAY_APP_API_KEY belum diisi.',
+            ], 422);
+        }
+
+        if ((string) config('services.alima_gateway.session_id') === '') {
+            return response()->json([
+                'message' => 'ALIMA_GATEWAY_SESSION_ID belum diisi.',
+            ], 422);
+        }
+
+        $resolvedImageUrl = $data['image_url'] ?? null;
+        if ($request->hasFile('image_file')) {
+            $resolvedImageUrl = $this->storeImageAndGetUrl($request->file('image_file'));
+        }
+
+        if (blank($data['message'] ?? null) && blank($resolvedImageUrl)) {
+            return response()->json([
+                'message' => 'message atau image_url/image_file wajib diisi.',
+            ], 422);
+        }
+
+        try {
+            $response = $fonnteService->sendMessage(
+                $data['whatsapp_number'],
+                (string) ($data['message'] ?? ''),
+                $resolvedImageUrl
+            );
+
+            WaBlastLog::create([
+                'admin_id' => $request->user()->id,
+                'message_template_id' => null,
+                'blast_type' => 'general',
+                'filters' => ['source' => 'api-manual-send'],
+                'recipients_count' => 1,
+                'rendered_messages' => collect([
+                    [
+                        'name' => 'Manual API',
+                        'whatsapp_number' => $data['whatsapp_number'],
+                        'message' => (string) ($data['message'] ?? ''),
+                        'image_url' => $resolvedImageUrl,
+                        'status' => 'sent',
+                        'response' => $response,
+                    ],
+                ])->toJson(),
+                'status' => 'manual-sent',
+                'blasted_at' => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Manual send berhasil.',
+                'result' => $response,
+                'image_url' => $resolvedImageUrl,
+            ]);
+        } catch (RuntimeException $e) {
+            WaBlastLog::create([
+                'admin_id' => $request->user()->id,
+                'message_template_id' => null,
+                'blast_type' => 'general',
+                'filters' => ['source' => 'api-manual-send'],
+                'recipients_count' => 1,
+                'rendered_messages' => collect([
+                    [
+                        'name' => 'Manual API',
+                        'whatsapp_number' => $data['whatsapp_number'],
+                        'message' => (string) ($data['message'] ?? ''),
+                        'image_url' => $resolvedImageUrl,
+                        'status' => 'failed',
+                        'response' => $e->getMessage(),
+                    ],
+                ])->toJson(),
+                'status' => 'manual-failed',
+                'blasted_at' => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Manual send gagal: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     private function baseClientQuery(): Builder
@@ -181,5 +277,12 @@ class WaBlastController extends Controller
             '{tier}' => (string) optional($client->tier)->name,
             '{date}' => $date->toDateString(),
         ]);
+    }
+
+    private function storeImageAndGetUrl(UploadedFile $file): string
+    {
+        $path = $file->store('wa-manual-images', 'public');
+
+        return Storage::disk('public')->url($path);
     }
 }

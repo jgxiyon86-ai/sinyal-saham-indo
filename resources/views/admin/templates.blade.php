@@ -30,7 +30,7 @@
     <div class="table-wrap">
         <table>
             <thead>
-            <tr><th>Nama</th><th>Event</th><th>Agama</th><th>Status</th><th>Aksi</th></tr>
+            <tr><th>Nama</th><th>Event</th><th>Agama</th><th>Gambar</th><th>Status</th><th>Aksi</th></tr>
             </thead>
             <tbody>
             @forelse($templates as $template)
@@ -38,6 +38,7 @@
                     <td>{{ $template->name }}</td>
                     <td>{{ strtoupper($template->event_type) }}</td>
                     <td>{{ config('religions.options.'.$template->religion) ?? '-' }}</td>
+                    <td>{{ $template->image_url ? 'Ya' : '-' }}</td>
                     <td>{{ $template->is_active ? 'Aktif' : 'Nonaktif' }}</td>
                     <td>
                         <div class="actions">
@@ -51,7 +52,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="5">Belum ada template.</td></tr>
+                <tr><td colspan="6">Belum ada template.</td></tr>
             @endforelse
             </tbody>
         </table>

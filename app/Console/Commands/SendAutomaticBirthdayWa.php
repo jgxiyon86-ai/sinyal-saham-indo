@@ -60,6 +60,16 @@ class SendAutomaticBirthdayWa extends Command
             return self::SUCCESS;
         }
 
+        if (! $isDryRun && (string) config('services.alima_gateway.app_api_key') === '') {
+            $this->error('ALIMA_GATEWAY_APP_API_KEY belum diisi di file .env');
+            return self::FAILURE;
+        }
+
+        if (! $isDryRun && (string) config('services.alima_gateway.session_id') === '') {
+            $this->error('ALIMA_GATEWAY_SESSION_ID belum diisi di file .env');
+            return self::FAILURE;
+        }
+
         $success = 0;
         $failed = 0;
         $rows = [];
@@ -86,6 +96,7 @@ class SendAutomaticBirthdayWa extends Command
                     'name' => $client->name,
                     'whatsapp_number' => $client->whatsapp_number,
                     'message' => $message,
+                    'image_url' => $template->image_url,
                     'status' => 'dry-run',
                     'response' => 'Simulasi tanpa kirim.',
                 ];
@@ -93,12 +104,17 @@ class SendAutomaticBirthdayWa extends Command
             }
 
             try {
-                $result = $fonnteService->sendMessage((string) $client->whatsapp_number, $message);
+                $result = $fonnteService->sendMessage(
+                    (string) $client->whatsapp_number,
+                    $message,
+                    $template->image_url
+                );
                 $success++;
                 $rows[] = [
                     'name' => $client->name,
                     'whatsapp_number' => $client->whatsapp_number,
                     'message' => $message,
+                    'image_url' => $template->image_url,
                     'status' => 'sent',
                     'response' => $result,
                 ];
@@ -108,6 +124,7 @@ class SendAutomaticBirthdayWa extends Command
                     'name' => $client->name,
                     'whatsapp_number' => $client->whatsapp_number,
                     'message' => $message,
+                    'image_url' => $template->image_url,
                     'status' => 'failed',
                     'response' => $e->getMessage(),
                 ];

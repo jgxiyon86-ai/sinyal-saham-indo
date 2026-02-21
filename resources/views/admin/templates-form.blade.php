@@ -11,7 +11,7 @@
     @endif
 
     <div class="panel">
-        <form method="POST" action="{{ $template ? route('templates.update', $template) : route('templates.store') }}">
+        <form method="POST" action="{{ $template ? route('templates.update', $template) : route('templates.store') }}" enctype="multipart/form-data">
             @csrf
             @if ($template) @method('PUT') @endif
             <div class="field-grid">
@@ -39,6 +39,14 @@
                         <option value="1" @selected(old('is_active', $template->is_active ?? true))>Aktif</option>
                         <option value="0" @selected(!old('is_active', $template->is_active ?? true))>Nonaktif</option>
                     </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label>Image URL (opsional)</label>
+                    <input name="image_url" type="url" value="{{ old('image_url', $template->image_url ?? '') }}" placeholder="https://domain.com/file.jpg">
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label>Upload Gambar (opsional, akan override URL)</label>
+                    <input name="image_file" type="file" accept="image/*">
                 </div>
                 <div style="grid-column:1/-1;"><label>Isi Pesan</label><textarea name="content" required>{{ old('content', $template->content ?? '') }}</textarea></div>
             </div>

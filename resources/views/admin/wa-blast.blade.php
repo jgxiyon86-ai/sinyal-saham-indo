@@ -12,11 +12,13 @@
 
     <div class="panel">
         <h3 style="margin:0 0 10px;">Manual Send</h3>
-        <form method="POST" action="{{ route('wa-blast.manual-send') }}">
+        <form method="POST" action="{{ route('wa-blast.manual-send') }}" enctype="multipart/form-data">
             @csrf
             <div class="field-grid">
                 <div><label>Nomor HP Tujuan</label><input name="whatsapp_number" value="{{ old('whatsapp_number') }}" placeholder="628xxxx" required></div>
-                <div style="grid-column:1/-1;"><label>Pesan</label><textarea name="message" required>{{ old('message') }}</textarea></div>
+                <div><label>Image URL (opsional)</label><input name="image_url" type="url" value="{{ old('image_url') }}" placeholder="https://domain.com/file.jpg"></div>
+                <div style="grid-column:1/-1;"><label>Upload Gambar (opsional, akan override URL)</label><input name="image_file" type="file" accept="image/*"></div>
+                <div style="grid-column:1/-1;"><label>Pesan (opsional jika ada gambar)</label><textarea name="message">{{ old('message') }}</textarea></div>
             </div>
             <div style="margin-top:10px;"><button class="btn" type="submit" onclick="return confirm('Kirim manual sekarang?')">Kirim Manual</button></div>
         </form>
@@ -77,12 +79,12 @@
                 <input type="hidden" name="tier_id" value="{{ $preview['filters']['tier_id'] }}">
                 <input type="hidden" name="religion" value="{{ $preview['filters']['religion'] }}">
                 <input type="hidden" name="date" value="{{ $preview['date'] }}">
-                <button class="btn" type="submit" onclick="return confirm('Kirim WA ke semua target preview ini?')">Kirim Sekarang via Fonnte</button>
+                <button class="btn" type="submit" onclick="return confirm('Kirim WA ke semua target preview ini?')">Kirim Sekarang via ALIMA Gateway</button>
             </form>
 
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Nama</th><th>Nomor HP</th><th>Tier</th><th>Agama</th><th>Pesan</th></tr></thead>
+                    <thead><tr><th>Nama</th><th>Nomor HP</th><th>Tier</th><th>Agama</th><th>Gambar</th><th>Pesan</th></tr></thead>
                     <tbody>
                     @forelse($preview['messages'] as $item)
                         <tr>
@@ -90,10 +92,11 @@
                             <td>{{ $item['whatsapp_number'] }}</td>
                             <td>{{ $item['tier'] }}</td>
                             <td>{{ config('religions.options.'.$item['religion']) ?? '-' }}</td>
+                            <td>{{ !empty($item['image_url']) ? 'Ya' : '-' }}</td>
                             <td>{{ $item['message'] }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5">Tidak ada target sesuai filter.</td></tr>
+                        <tr><td colspan="6">Tidak ada target sesuai filter.</td></tr>
                     @endforelse
                     </tbody>
                 </table>

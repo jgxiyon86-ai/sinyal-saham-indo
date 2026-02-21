@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\MessageTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -69,7 +71,7 @@ class MessageTemplatePageController extends Controller
 
     private function validatedData(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'event_type' => ['required', Rule::in(['birthday', 'holiday', 'general'])],
             'religion' => [
@@ -78,7 +80,24 @@ class MessageTemplatePageController extends Controller
                 Rule::requiredIf($request->input('event_type') === 'holiday'),
             ],
             'content' => ['required', 'string'],
+            'image_url' => ['nullable', 'url'],
+            'image_file' => ['nullable', 'image', 'max:4096'],
             'is_active' => ['nullable', 'boolean'],
-        ]) + ['is_active' => $request->boolean('is_active')];
+        ]);
+
+        if ($request->hasFile('image_file')) {
+            $data['image_url'] = $this->storeImageAndGetUrl($request->file('image_file'));
+        }
+
+        unset($data['image_file']);
+
+        return $data + ['is_active' => $request->boolean('is_active')];
+    }
+
+    private function storeImageAndGetUrl(UploadedFile $file): string
+    {
+        $path = $file->store('wa-template-images', 'public');
+
+        return Storage::disk('public')->url($path);
     }
 }

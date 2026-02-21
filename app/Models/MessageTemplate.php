@@ -12,6 +12,7 @@ class MessageTemplate extends Model
         'event_type',
         'religion',
         'content',
+        'image_url',
         'is_active',
     ];
 

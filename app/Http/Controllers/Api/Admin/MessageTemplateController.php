@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\MessageTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class MessageTemplateController extends Controller
@@ -45,8 +47,16 @@ class MessageTemplateController extends Controller
                 Rule::requiredIf($request->input('event_type') === 'holiday'),
             ],
             'content' => ['required', 'string'],
+            'image_url' => ['nullable', 'url'],
+            'image_file' => ['nullable', 'image', 'max:4096'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        if ($request->hasFile('image_file')) {
+            $data['image_url'] = $this->storeImageAndGetUrl($request->file('image_file'));
+        }
+
+        unset($data['image_file']);
 
         $template = MessageTemplate::create([
             ...$data,
@@ -77,8 +87,16 @@ class MessageTemplateController extends Controller
                 Rule::requiredIf($request->input('event_type') === 'holiday'),
             ],
             'content' => ['required', 'string'],
+            'image_url' => ['nullable', 'url'],
+            'image_file' => ['nullable', 'image', 'max:4096'],
             'is_active' => ['required', 'boolean'],
         ]);
+
+        if ($request->hasFile('image_file')) {
+            $data['image_url'] = $this->storeImageAndGetUrl($request->file('image_file'));
+        }
+
+        unset($data['image_file']);
 
         $messageTemplate->update($data);
 
@@ -95,5 +113,12 @@ class MessageTemplateController extends Controller
         return response()->json([
             'message' => 'Template berhasil dihapus.',
         ]);
+    }
+
+    private function storeImageAndGetUrl(UploadedFile $file): string
+    {
+        $path = $file->store('wa-template-images', 'public');
+
+        return Storage::disk('public')->url($path);
     }
 }

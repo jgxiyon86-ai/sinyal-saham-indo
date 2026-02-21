@@ -41,6 +41,12 @@ return [
         'country_code' => env('FONNTE_COUNTRY_CODE', '62'),
     ],
 
+    'alima_gateway' => [
+        'base_url' => env('ALIMA_GATEWAY_BASE_URL', 'http://127.0.0.1:3210'),
+        'app_api_key' => env('ALIMA_GATEWAY_APP_API_KEY'),
+        'session_id' => env('ALIMA_GATEWAY_SESSION_ID'),
+    ],
+
     'fcm' => [
         'server_key' => env('FCM_SERVER_KEY'),
         'url' => env('FCM_URL', 'https://fcm.googleapis.com/fcm/send'),

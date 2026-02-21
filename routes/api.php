@@ -29,5 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('wa-blast/birthdays', [WaBlastController::class, 'birthdayTargets']);
         Route::get('wa-blast/holidays', [WaBlastController::class, 'holidayTargets']);
         Route::post('wa-blast/preview', [WaBlastController::class, 'preview']);
+        Route::post('wa-blast/manual-send', [WaBlastController::class, 'manualSend']);
     });
 });
