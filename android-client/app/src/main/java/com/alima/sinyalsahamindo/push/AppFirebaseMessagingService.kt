@@ -2,16 +2,34 @@ package com.alima.sinyalsahamindo.push
 
 import android.content.Intent
 import android.util.Log
+import com.alima.sinyalsahamindo.data.network.RetrofitProvider
 import com.alima.sinyalsahamindo.data.model.SignalItem
 import com.alima.sinyalsahamindo.util.AlertHelper
+import com.alima.sinyalsahamindo.util.SessionManager
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AppFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d("FCM", "New token: $token")
+        val session = SessionManager(applicationContext)
+        session.saveFcmToken(token)
+
+        val authToken = session.getToken()
+        if (!authToken.isNullOrBlank()) {
+            CoroutineScope(Dispatchers.IO).launch {
+                runCatching {
+                    RetrofitProvider.api.updateFcmToken("Bearer $authToken", token)
+                }.onFailure {
+                    Log.w("FCM", "Gagal update token ke backend: ${it.message}")
+                }
+            }
+        }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {

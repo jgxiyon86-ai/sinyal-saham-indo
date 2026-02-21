@@ -45,6 +45,16 @@ class PublishDueSignals extends Command
         foreach ($signals as $signal) {
             try {
                 $result = $this->fcmService->pushSignalToTierClients($signal);
+                if (! ($result['enabled'] ?? false)) {
+                    $this->warn("Signal #{$signal->id} belum dipush: ".($result['message'] ?? 'FCM belum aktif.'));
+                    continue;
+                }
+
+                if (($result['sent'] ?? 0) <= 0) {
+                    $this->warn("Signal #{$signal->id} belum terkirim ke device mana pun. Akan dicoba lagi menit berikutnya.");
+                    continue;
+                }
+
                 $signal->forceFill(['push_sent_at' => now()])->save();
                 $sentSignals++;
 
@@ -63,4 +73,3 @@ class PublishDueSignals extends Command
         return self::SUCCESS;
     }
 }
-
