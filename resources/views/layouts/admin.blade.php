@@ -199,6 +199,7 @@
             <a href="{{ route('templates.page') }}" class="{{ request()->routeIs('templates.*') ? 'active' : '' }}">Template Pesan</a>
             <a href="{{ route('wa-blast.page') }}" class="{{ request()->routeIs('wa-blast.*') ? 'active' : '' }}">WA Blast</a>
             <a href="{{ route('push.page') }}" class="{{ request()->routeIs('push.*') ? 'active' : '' }}">Push Broadcast</a>
+            <a href="{{ route('login-theme.page') }}" class="{{ request()->routeIs('login-theme.*') ? 'active' : '' }}">Tema Login</a>
         </nav>
     </aside>
 

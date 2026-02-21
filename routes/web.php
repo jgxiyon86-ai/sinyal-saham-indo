@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\PushPageController;
 use App\Http\Controllers\Web\SignalPageController;
 use App\Http\Controllers\Web\TierPageController;
 use App\Http\Controllers\Web\WaBlastPageController;
+use App\Http\Controllers\Web\LoginThemePageController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -55,6 +56,8 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::post('/wa-blast/manual-send', [WaBlastPageController::class, 'manualSend'])->name('wa-blast.manual-send');
     Route::get('/push-broadcast', [PushPageController::class, 'index'])->name('push.page');
     Route::post('/push-broadcast', [PushPageController::class, 'send'])->name('push.send');
+    Route::get('/login-theme', [LoginThemePageController::class, 'index'])->name('login-theme.page');
+    Route::post('/login-theme', [LoginThemePageController::class, 'update'])->name('login-theme.update');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

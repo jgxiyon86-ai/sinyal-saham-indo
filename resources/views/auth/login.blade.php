@@ -35,22 +35,6 @@
             width: 100%;
             max-width: 430px;
         }
-        .template-row {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 10px;
-        }
-        .template-row select {
-            width: auto;
-            min-width: 175px;
-            border: 1px solid rgba(200, 232, 255, .65);
-            background: rgba(8, 47, 99, .65);
-            color: #eef6ff;
-            border-radius: 10px;
-            padding: 8px 10px;
-            font-size: 13px;
-            backdrop-filter: blur(4px);
-        }
         .card {
             width: 100%;
             background: linear-gradient(145deg, var(--panel), var(--panel2));
@@ -147,14 +131,8 @@
         }
     </style>
 </head>
-<body>
+<body class="{{ ($loginTheme ?? 'modern') === 'premium' ? 'theme-premium' : '' }}">
 <div class="page">
-    <div class="template-row">
-        <select id="templatePicker">
-            <option value="modern">Template Modern Blue</option>
-            <option value="premium">Template Premium Elegant</option>
-        </select>
-    </div>
     <main class="card">
         <div class="brand-wrap">
             <img class="brand-logo" src="{{ asset('assets/sinyal-saham-logo.svg') }}" alt="Sinyal Saham Indo">
@@ -184,23 +162,5 @@
     </main>
 </div>
 
-<script>
-    (function () {
-        const key = 'ssi_login_theme';
-        const picker = document.getElementById('templatePicker');
-        const saved = localStorage.getItem(key) || 'modern';
-        picker.value = saved;
-
-        const applyTheme = (val) => {
-            document.body.classList.toggle('theme-premium', val === 'premium');
-        };
-
-        applyTheme(saved);
-        picker.addEventListener('change', function () {
-            localStorage.setItem(key, this.value);
-            applyTheme(this.value);
-        });
-    })();
-</script>
 </body>
 </html>
