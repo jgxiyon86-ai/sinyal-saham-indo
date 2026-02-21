@@ -57,7 +57,8 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::get('/push-broadcast', [PushPageController::class, 'index'])->name('push.page');
     Route::post('/push-broadcast', [PushPageController::class, 'send'])->name('push.send');
     Route::get('/login-theme', [LoginThemePageController::class, 'index'])->name('login-theme.page');
-    Route::post('/login-theme', [LoginThemePageController::class, 'update'])->name('login-theme.update');
+    Route::post('/login-theme/login', [LoginThemePageController::class, 'updateLogin'])->name('login-theme.login.update');
+    Route::post('/login-theme/panel', [LoginThemePageController::class, 'updatePanel'])->name('login-theme.panel.update');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

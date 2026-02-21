@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light only">
     <title>@yield('title', 'Admin Panel') - Sinyal Saham Indo</title>
+    @php($panelTheme = \App\Models\AppSetting::getValue('panel_theme', 'modern'))
     <style>
         :root {
             color-scheme: only light;
@@ -170,6 +171,58 @@
             text-align: center;
             padding: 8px 0 4px;
         }
+
+        /* Lux theme */
+        body.theme-lux {
+            --bg: #f4efe4;
+            --sidebar: #202635;
+            --sidebar-muted: #d8c8a3;
+            --card: #fffdfa;
+            --text: #2d2417;
+            --muted: #6e5d40;
+            --accent: #b88a2a;
+        }
+        body.theme-lux .sidebar {
+            background: linear-gradient(180deg, #1d2330 0%, #161c29 100%);
+            border-right: 1px solid #2d3446;
+        }
+        body.theme-lux .menu a.active {
+            background: rgba(184, 138, 42, 0.18);
+            border-color: rgba(184, 138, 42, 0.7);
+            color: #f7e8c8;
+        }
+        body.theme-lux .topbar,
+        body.theme-lux .main-card {
+            box-shadow: 0 14px 32px rgba(47, 35, 15, 0.12);
+            border: 1px solid #efe3c9;
+        }
+        body.theme-lux .panel {
+            background: #fff8ec;
+            border-color: #ead7b0;
+        }
+        body.theme-lux th {
+            background: #f7ecd8;
+            color: #6a4f1a;
+        }
+        body.theme-lux input,
+        body.theme-lux select,
+        body.theme-lux textarea {
+            border-color: #d8c399;
+            color: #2d2417;
+            background: #fffdf8;
+        }
+        body.theme-lux .btn {
+            background: linear-gradient(180deg, #c79a36 0%, #a97b1f 100%);
+            color: #fff9ef;
+        }
+        body.theme-lux .btn-muted { background: #6e5d40; }
+        body.theme-lux .btn-danger { background: #c2413b; }
+        body.theme-lux .status {
+            background: #fff6e3;
+            border-color: #edd7a8;
+            color: #8c6514;
+        }
+
         @media (max-width: 920px) {
             .app { grid-template-columns: 1fr; }
             .sidebar { padding: 12px; }
@@ -183,7 +236,7 @@
         }
     </style>
 </head>
-<body>
+<body class="{{ $panelTheme === 'lux' ? 'theme-lux' : 'theme-modern' }}">
 <div class="app">
     <aside class="sidebar">
         <div class="brand-wrap">
@@ -199,7 +252,7 @@
             <a href="{{ route('templates.page') }}" class="{{ request()->routeIs('templates.*') ? 'active' : '' }}">Template Pesan</a>
             <a href="{{ route('wa-blast.page') }}" class="{{ request()->routeIs('wa-blast.*') ? 'active' : '' }}">WA Blast</a>
             <a href="{{ route('push.page') }}" class="{{ request()->routeIs('push.*') ? 'active' : '' }}">Push Broadcast</a>
-            <a href="{{ route('login-theme.page') }}" class="{{ request()->routeIs('login-theme.*') ? 'active' : '' }}">Tema Login</a>
+            <a href="{{ route('login-theme.page') }}" class="{{ request()->routeIs('login-theme.*') ? 'active' : '' }}">Tema UI</a>
         </nav>
     </aside>
 

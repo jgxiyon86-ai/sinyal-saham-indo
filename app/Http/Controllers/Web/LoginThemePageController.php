@@ -19,10 +19,15 @@ class LoginThemePageController extends Controller
                 'modern' => 'Modern Blue',
                 'premium' => 'Premium Elegant',
             ],
+            'activePanelTheme' => AppSetting::getValue('panel_theme', 'modern'),
+            'panelThemes' => [
+                'modern' => 'Modern Blue',
+                'lux' => 'Lux Gold',
+            ],
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function updateLogin(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'login_theme' => ['required', Rule::in(['modern', 'premium'])],
@@ -32,5 +37,15 @@ class LoginThemePageController extends Controller
 
         return redirect()->route('login-theme.page')->with('status', 'Tema login berhasil diupdate.');
     }
-}
 
+    public function updatePanel(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'panel_theme' => ['required', Rule::in(['modern', 'lux'])],
+        ]);
+
+        AppSetting::setValue('panel_theme', $data['panel_theme']);
+
+        return redirect()->route('login-theme.page')->with('status', 'Tema panel berhasil diupdate.');
+    }
+}
