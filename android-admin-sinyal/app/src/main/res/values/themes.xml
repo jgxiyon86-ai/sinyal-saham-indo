@@ -1,0 +1,9 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.AdminSinyal" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#0E5DCC</item>
+        <item name="colorPrimaryContainer">#DCEBFF</item>
+        <item name="android:statusBarColor">#0E5DCC</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+</resources>
+

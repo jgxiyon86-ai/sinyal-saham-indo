@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Sinyal Admin</string>
+    <string name="login_title">Admin Login</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="btn_login">Masuk</string>
+    <string name="dashboard_title">Admin Sinyal</string>
+    <string name="btn_create_signal">Simpan Sinyal</string>
+    <string name="btn_send_blast">Send WA Blast</string>
+    <string name="btn_logout">Logout</string>
+</resources>
+
