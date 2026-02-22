@@ -17,6 +17,7 @@ class Signal extends Model
         'take_profit',
         'stop_loss',
         'note',
+        'image_url',
         'published_at',
         'expires_at',
         'push_sent_at',

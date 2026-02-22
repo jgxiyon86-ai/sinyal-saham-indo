@@ -31,7 +31,7 @@
     <div class="table-wrap">
         <table>
             <thead>
-            <tr><th>Judul</th><th>Kode</th><th>Tipe</th><th>Tier</th><th>Publikasi</th><th>Status Push</th><th>Berlaku Sampai</th><th>Aksi</th></tr>
+            <tr><th>Judul</th><th>Kode</th><th>Tipe</th><th>Gambar</th><th>Tier</th><th>Publikasi</th><th>Status Push</th><th>Berlaku Sampai</th><th>Aksi</th></tr>
             </thead>
             <tbody>
             @forelse($signals as $signal)
@@ -39,6 +39,7 @@
                     <td>{{ $signal->title }}</td>
                     <td>{{ $signal->stock_code }}</td>
                     <td>{{ strtoupper($signal->signal_type) }}</td>
+                    <td>{{ $signal->image_url ? 'Ya' : '-' }}</td>
                     <td>{{ $signal->tiers->pluck('name')->implode(', ') }}</td>
                     <td>{{ optional($signal->published_at)->format('Y-m-d H:i') }}</td>
                     <td>
@@ -65,7 +66,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="8">Belum ada sinyal.</td></tr>
+                <tr><td colspan="9">Belum ada sinyal.</td></tr>
             @endforelse
             </tbody>
         </table>

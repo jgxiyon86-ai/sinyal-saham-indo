@@ -36,9 +36,9 @@
                 <div style="grid-column:1/-1;"><label>Opening</label><input name="opening_text" value="{{ old('opening_text', $settings['opening_text']) }}"></div>
                 <div style="grid-column:1/-1;"><label>Closing</label><input name="closing_text" value="{{ old('closing_text', $settings['closing_text']) }}"></div>
                 <div style="grid-column:1/-1;">
-                    <label>Image URL (opsional)</label>
+                    <label>Image URL Fallback (opsional)</label>
                     <input id="image-url-signal-blast" type="url" name="image_url" value="{{ old('image_url', $settings['image_url']) }}" placeholder="https://domain.com/gambar.jpg">
-                    <div style="font-size:12px;color:#4d6b8f;margin-top:4px;">Bisa Ctrl+V screenshot langsung di kolom ini.</div>
+                    <div style="font-size:12px;color:#4d6b8f;margin-top:4px;">Default pakai gambar per-sinyal. Kolom ini hanya fallback. Bisa Ctrl+V screenshot langsung.</div>
                 </div>
             </div>
 
@@ -92,7 +92,7 @@
 
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Nama</th><th>Nomor HP</th><th>Tier</th><th>Jumlah Sinyal</th><th>Pesan</th></tr></thead>
+                    <thead><tr><th>Nama</th><th>Nomor HP</th><th>Tier</th><th>Jumlah Sinyal</th><th>Gambar Per Sinyal</th><th>Pesan</th></tr></thead>
                     <tbody>
                     @foreach($preview as $row)
                         <tr>
@@ -100,6 +100,10 @@
                             <td>{{ $row['whatsapp_number'] }}</td>
                             <td>{{ $row['tier'] }}</td>
                             <td>{{ $row['signals_count'] }}</td>
+                            <td>
+                                @php($withImage = collect($row['signal_items'])->filter(fn($x) => !empty($x['image_url']))->count())
+                                {{ $withImage }}/{{ $row['signals_count'] }}
+                            </td>
                             <td>{{ $row['message'] }}</td>
                         </tr>
                     @endforeach

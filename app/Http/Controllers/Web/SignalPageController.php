@@ -133,6 +133,7 @@ class SignalPageController extends Controller
             'take_profit' => ['nullable', 'numeric', 'min:0'],
             'stop_loss' => ['nullable', 'numeric', 'min:0'],
             'note' => ['nullable', 'string'],
+            'image_url' => ['nullable', 'url', 'max:500'],
             'published_at' => ['nullable', 'date'],
             'expires_at' => ['nullable', 'date', 'after_or_equal:published_at'],
             'tier_target' => ['required', 'string'],
