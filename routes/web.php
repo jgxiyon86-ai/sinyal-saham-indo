@@ -55,6 +55,7 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::post('/wa-blast/preview', [WaBlastPageController::class, 'preview'])->name('wa-blast.preview');
     Route::post('/wa-blast/send', [WaBlastPageController::class, 'send'])->name('wa-blast.send');
     Route::post('/wa-blast/manual-send', [WaBlastPageController::class, 'manualSend'])->name('wa-blast.manual-send');
+    Route::post('/wa-blast/upload-image', [WaBlastPageController::class, 'uploadImage'])->name('wa-blast.upload-image');
     Route::get('/wa-blast-sinyal', [SignalWaBlastPageController::class, 'index'])->name('signal-wa-blast.page');
     Route::post('/wa-blast-sinyal/preview', [SignalWaBlastPageController::class, 'preview'])->name('signal-wa-blast.preview');
     Route::post('/wa-blast-sinyal/send', [SignalWaBlastPageController::class, 'send'])->name('signal-wa-blast.send');

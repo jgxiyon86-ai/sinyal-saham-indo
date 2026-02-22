@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\WaBlastLog;
 use App\Services\FonnteService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -220,6 +221,20 @@ class WaBlastPageController extends Controller
 
             return redirect()->route('wa-blast.page')->with('status', 'Manual send gagal: '.$e->getMessage());
         }
+    }
+
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'clipboard_image' => ['required', 'image', 'max:4096'],
+        ]);
+
+        $url = $this->storeImageAndGetUrl($data['clipboard_image']);
+
+        return response()->json([
+            'status' => true,
+            'url' => $url,
+        ]);
     }
 
     private function buildMessages(Request $request): array

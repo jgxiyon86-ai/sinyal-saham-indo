@@ -35,7 +35,11 @@
                 <div><label>Maksimal target per blast</label><input type="number" min="1" max="300" name="max_recipients" value="{{ old('max_recipients', $settings['max_recipients']) }}" required></div>
                 <div style="grid-column:1/-1;"><label>Opening</label><input name="opening_text" value="{{ old('opening_text', $settings['opening_text']) }}"></div>
                 <div style="grid-column:1/-1;"><label>Closing</label><input name="closing_text" value="{{ old('closing_text', $settings['closing_text']) }}"></div>
-                <div style="grid-column:1/-1;"><label>Image URL (opsional)</label><input type="url" name="image_url" value="{{ old('image_url', $settings['image_url']) }}" placeholder="https://domain.com/gambar.jpg"></div>
+                <div style="grid-column:1/-1;">
+                    <label>Image URL (opsional)</label>
+                    <input id="image-url-signal-blast" type="url" name="image_url" value="{{ old('image_url', $settings['image_url']) }}" placeholder="https://domain.com/gambar.jpg">
+                    <div style="font-size:12px;color:#4d6b8f;margin-top:4px;">Bisa Ctrl+V screenshot langsung di kolom ini.</div>
+                </div>
             </div>
 
             <div class="table-wrap">
@@ -132,3 +136,58 @@
     </div>
 @endsection
 
+@push('scripts')
+<script>
+(function () {
+    const input = document.getElementById('image-url-signal-blast');
+    if (!input) return;
+
+    async function uploadClipboardImage(file) {
+        const formData = new FormData();
+        formData.append('clipboard_image', file, 'screenshot.png');
+
+        const resp = await fetch('{{ route('wa-blast.upload-image') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        if (!resp.ok) {
+            throw new Error('Upload gambar gagal');
+        }
+
+        const json = await resp.json();
+        if (!json.url) {
+            throw new Error('URL gambar tidak ditemukan');
+        }
+
+        input.value = json.url;
+    }
+
+    input.addEventListener('paste', async function (e) {
+        const items = e.clipboardData?.items || [];
+        for (const item of items) {
+            if (item.type && item.type.startsWith('image/')) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (!file) return;
+
+                const oldPlaceholder = input.placeholder;
+                input.placeholder = 'Uploading screenshot...';
+                try {
+                    await uploadClipboardImage(file);
+                } catch (err) {
+                    alert(err.message || 'Gagal upload screenshot');
+                } finally {
+                    input.placeholder = oldPlaceholder;
+                }
+                return;
+            }
+        }
+    });
+})();
+</script>
+@endpush

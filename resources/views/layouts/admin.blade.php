@@ -276,5 +276,6 @@
         <footer class="footer">Copyright &copy; {{ date('Y') }} Alima Creation</footer>
     </div>
 </div>
+@stack('scripts')
 </body>
 </html>

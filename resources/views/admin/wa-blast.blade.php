@@ -16,7 +16,11 @@
             @csrf
             <div class="field-grid">
                 <div><label>Nomor HP Tujuan</label><input name="whatsapp_number" value="{{ old('whatsapp_number') }}" placeholder="628xxxx" required></div>
-                <div><label>Image URL (opsional)</label><input name="image_url" type="url" value="{{ old('image_url') }}" placeholder="https://domain.com/file.jpg"></div>
+                <div>
+                    <label>Image URL (opsional)</label>
+                    <input id="image-url-manual" name="image_url" type="url" value="{{ old('image_url') }}" placeholder="https://domain.com/file.jpg">
+                    <div style="font-size:12px;color:#4d6b8f;margin-top:4px;">Bisa Ctrl+V screenshot langsung di kolom ini.</div>
+                </div>
                 <div style="grid-column:1/-1;"><label>Upload Gambar (opsional, akan override URL)</label><input name="image_file" type="file" accept="image/*"></div>
                 <div style="grid-column:1/-1;"><label>Pesan (opsional jika ada gambar)</label><textarea name="message">{{ old('message') }}</textarea></div>
             </div>
@@ -137,3 +141,59 @@
         <div class="pagination">{{ $logs->links() }}</div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const input = document.getElementById('image-url-manual');
+    if (!input) return;
+
+    async function uploadClipboardImage(file) {
+        const formData = new FormData();
+        formData.append('clipboard_image', file, 'screenshot.png');
+
+        const resp = await fetch('{{ route('wa-blast.upload-image') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        if (!resp.ok) {
+            throw new Error('Upload gambar gagal');
+        }
+
+        const json = await resp.json();
+        if (!json.url) {
+            throw new Error('URL gambar tidak ditemukan');
+        }
+
+        input.value = json.url;
+    }
+
+    input.addEventListener('paste', async function (e) {
+        const items = e.clipboardData?.items || [];
+        for (const item of items) {
+            if (item.type && item.type.startsWith('image/')) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                if (!file) return;
+
+                const oldPlaceholder = input.placeholder;
+                input.placeholder = 'Uploading screenshot...';
+                try {
+                    await uploadClipboardImage(file);
+                } catch (err) {
+                    alert(err.message || 'Gagal upload screenshot');
+                } finally {
+                    input.placeholder = oldPlaceholder;
+                }
+                return;
+            }
+        }
+    });
+})();
+</script>
+@endpush
