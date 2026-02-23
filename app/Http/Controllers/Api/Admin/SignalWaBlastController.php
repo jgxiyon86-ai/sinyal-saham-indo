@@ -104,8 +104,9 @@ class SignalWaBlastController extends Controller
         WaBlastLog::create([
             'admin_id' => $request->user()->id,
             'message_template_id' => null,
-            'blast_type' => 'signal-batch-api',
+            'blast_type' => 'general',
             'filters' => [
+                'source' => 'signal-batch-api',
                 'signal_ids' => array_values(array_unique($data['signal_ids'])),
                 'tier_id' => $data['tier_id'] ?? null,
                 'delay_seconds' => $delaySeconds,

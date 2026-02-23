@@ -26,6 +26,15 @@ class SignalWaBlastPageController extends Controller
 
     public function index(): View
     {
+        $logs = WaBlastLog::with('admin')
+            ->where('blast_type', 'general')
+            ->where(function ($query) {
+                $query->where('filters->source', 'signal-batch-web')
+                    ->orWhere('filters->source', 'signal-batch-api');
+            })
+            ->latest()
+            ->paginate(20);
+
         return view('admin.signal-wa-blast', [
             'signals' => $this->availableSignals(),
             'tiers' => Tier::query()->orderBy('min_capital')->get(),
@@ -39,7 +48,7 @@ class SignalWaBlastPageController extends Controller
                 'closing_text' => 'Gunakan manajemen risiko. Bukan ajakan beli/jual.',
                 'image_url' => '',
             ],
-            'logs' => WaBlastLog::with('admin')->where('blast_type', 'signal-batch')->latest()->paginate(20),
+            'logs' => $logs,
         ]);
     }
 
@@ -65,7 +74,14 @@ class SignalWaBlastPageController extends Controller
                     'closing_text' => 'Gunakan manajemen risiko. Bukan ajakan beli/jual.',
                     'image_url' => '',
                 ],
-                'logs' => WaBlastLog::with('admin')->where('blast_type', 'signal-batch')->latest()->paginate(20),
+                'logs' => WaBlastLog::with('admin')
+                    ->where('blast_type', 'general')
+                    ->where(function ($query) {
+                        $query->where('filters->source', 'signal-batch-web')
+                            ->orWhere('filters->source', 'signal-batch-api');
+                    })
+                    ->latest()
+                    ->paginate(20),
             ])->with('status', 'Preview gagal: '.$e->getMessage());
         }
 
@@ -82,7 +98,14 @@ class SignalWaBlastPageController extends Controller
                 'closing_text' => $payload['closing_text'],
                 'image_url' => $payload['image_url'] ?? '',
             ],
-            'logs' => WaBlastLog::with('admin')->where('blast_type', 'signal-batch')->latest()->paginate(20),
+            'logs' => WaBlastLog::with('admin')
+                ->where('blast_type', 'general')
+                ->where(function ($query) {
+                    $query->where('filters->source', 'signal-batch-web')
+                        ->orWhere('filters->source', 'signal-batch-api');
+                })
+                ->latest()
+                ->paginate(20),
         ]);
     }
 
@@ -180,8 +203,9 @@ class SignalWaBlastPageController extends Controller
         WaBlastLog::create([
             'admin_id' => $request->user()->id,
             'message_template_id' => null,
-            'blast_type' => 'signal-batch',
+            'blast_type' => 'general',
             'filters' => [
+                'source' => 'signal-batch-web',
                 'tier_id' => $payload['tier_id'],
                 'signal_ids' => $payload['signal_ids'],
                 'delay_seconds' => $payload['delay_seconds'],
