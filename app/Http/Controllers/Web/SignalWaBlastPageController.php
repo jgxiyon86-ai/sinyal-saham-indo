@@ -13,8 +13,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use RuntimeException;
+use Throwable;
 
 class SignalWaBlastPageController extends Controller
 {
@@ -43,7 +45,29 @@ class SignalWaBlastPageController extends Controller
 
     public function preview(Request $request): View
     {
-        [$payload, $targets] = $this->buildPayload($request);
+        try {
+            [$payload, $targets] = $this->buildPayload($request);
+        } catch (Throwable $e) {
+            Log::error('Signal WA blast preview error', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return view('admin.signal-wa-blast', [
+                'signals' => $this->availableSignals(),
+                'tiers' => Tier::query()->orderBy('min_capital')->get(),
+                'preview' => null,
+                'selectedSignalIds' => [],
+                'selectedTierId' => null,
+                'settings' => [
+                    'delay_seconds' => 12,
+                    'max_recipients' => 40,
+                    'opening_text' => 'Halo {name}, berikut update sinyal saham kamu hari ini:',
+                    'closing_text' => 'Gunakan manajemen risiko. Bukan ajakan beli/jual.',
+                    'image_url' => '',
+                ],
+                'logs' => WaBlastLog::with('admin')->where('blast_type', 'signal-batch')->latest()->paginate(20),
+            ])->with('status', 'Preview gagal: '.$e->getMessage());
+        }
 
         return view('admin.signal-wa-blast', [
             'signals' => $this->availableSignals(),
@@ -64,7 +88,16 @@ class SignalWaBlastPageController extends Controller
 
     public function send(Request $request): RedirectResponse
     {
-        [$payload, $targets] = $this->buildPayload($request);
+        try {
+            [$payload, $targets] = $this->buildPayload($request);
+        } catch (Throwable $e) {
+            Log::error('Signal WA blast build payload error', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('signal-wa-blast.page')
+                ->with('status', 'WA Blast gagal menyiapkan data: '.$e->getMessage());
+        }
 
         if (GatewaySetting::appApiKey() === '') {
             return redirect()->route('signal-wa-blast.page')
@@ -87,52 +120,61 @@ class SignalWaBlastPageController extends Controller
         $targetsCount = $targets->count();
         $sentMessagesCount = 0;
 
-        foreach ($targets as $target) {
-            foreach ($target['signal_items'] as $itemIndex => $signalItem) {
-                $imageToSend = $signalItem['image_url'] ?: ($payload['image_url'] ?: null);
-                try {
-                    $response = $this->fonnteService->sendMessage(
-                        (string) $target['whatsapp_number'],
-                        (string) $signalItem['message'],
-                        $imageToSend
-                    );
-                    $success++;
-                    $sentMessagesCount++;
-                    $results[] = [
-                        'name' => $target['name'],
-                        'whatsapp_number' => $target['whatsapp_number'],
-                        'tier' => $target['tier'],
-                        'signal_id' => $signalItem['signal_id'],
-                        'signal_title' => $signalItem['signal_title'],
-                        'message' => $signalItem['message'],
-                        'image_url' => $imageToSend,
-                        'status' => 'sent',
-                        'response' => $response,
-                    ];
-                } catch (RuntimeException $e) {
-                    $failed++;
-                    $results[] = [
-                        'name' => $target['name'],
-                        'whatsapp_number' => $target['whatsapp_number'],
-                        'tier' => $target['tier'],
-                        'signal_id' => $signalItem['signal_id'],
-                        'signal_title' => $signalItem['signal_title'],
-                        'message' => $signalItem['message'],
-                        'image_url' => $imageToSend,
-                        'status' => 'failed',
-                        'response' => $e->getMessage(),
-                    ];
+        try {
+            foreach ($targets as $target) {
+                foreach ($target['signal_items'] as $itemIndex => $signalItem) {
+                    $imageToSend = $signalItem['image_url'] ?: ($payload['image_url'] ?: null);
+                    try {
+                        $response = $this->fonnteService->sendMessage(
+                            (string) $target['whatsapp_number'],
+                            (string) $signalItem['message'],
+                            $imageToSend
+                        );
+                        $success++;
+                        $sentMessagesCount++;
+                        $results[] = [
+                            'name' => $target['name'],
+                            'whatsapp_number' => $target['whatsapp_number'],
+                            'tier' => $target['tier'],
+                            'signal_id' => $signalItem['signal_id'],
+                            'signal_title' => $signalItem['signal_title'],
+                            'message' => $signalItem['message'],
+                            'image_url' => $imageToSend,
+                            'status' => 'sent',
+                            'response' => $response,
+                        ];
+                    } catch (RuntimeException $e) {
+                        $failed++;
+                        $results[] = [
+                            'name' => $target['name'],
+                            'whatsapp_number' => $target['whatsapp_number'],
+                            'tier' => $target['tier'],
+                            'signal_id' => $signalItem['signal_id'],
+                            'signal_title' => $signalItem['signal_title'],
+                            'message' => $signalItem['message'],
+                            'image_url' => $imageToSend,
+                            'status' => 'failed',
+                            'response' => $e->getMessage(),
+                        ];
+                    }
+
+                    $isLastMessage = $itemIndex === (count($target['signal_items']) - 1);
+                    if (! $isLastMessage && $delaySeconds > 0) {
+                        sleep($delaySeconds);
+                    }
                 }
 
-                $isLastMessage = $itemIndex === (count($target['signal_items']) - 1);
-                if (! $isLastMessage && $delaySeconds > 0) {
+                if ($delaySeconds > 0) {
                     sleep($delaySeconds);
                 }
             }
+        } catch (Throwable $e) {
+            Log::error('Signal WA blast send fatal error', [
+                'message' => $e->getMessage(),
+            ]);
 
-            if ($delaySeconds > 0) {
-                sleep($delaySeconds);
-            }
+            return redirect()->route('signal-wa-blast.page')
+                ->with('status', 'WA Blast gagal: '.$e->getMessage());
         }
 
         WaBlastLog::create([
