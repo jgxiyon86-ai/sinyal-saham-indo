@@ -4,22 +4,20 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Signal;
+use App\Models\SignalWaBlastBatch;
+use App\Models\SignalWaBlastTarget;
 use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
-use App\Services\FonnteService;
 use App\Support\GatewaySetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use RuntimeException;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class SignalWaBlastController extends Controller
 {
-    public function __construct(private readonly FonnteService $fonnteService)
-    {
-    }
-
     public function send(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -58,13 +56,10 @@ class SignalWaBlastController extends Controller
         $clients = $clientsQuery->limit(1500)->get();
         $clients = $this->applyTierBlastLimit($clients)->take($maxRecipients)->values();
 
-        $success = 0;
-        $failed = 0;
-        $results = [];
-
+        $jobs = [];
         foreach ($clients as $client) {
             $matched = $signals->filter(fn (Signal $signal) => $signal->tiers->contains('id', $client->tier_id))->values();
-            foreach ($matched as $index => $signal) {
+            foreach ($matched as $signal) {
                 $type = strtoupper((string) $signal->signal_type);
                 $code = strtoupper((string) $signal->stock_code);
                 $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 0, '.', ',') : '-';
@@ -73,77 +68,103 @@ class SignalWaBlastController extends Controller
                 $line = "{$code} {$type} | Entry {$entry} | TP {$tp} | SL {$sl}";
                 $message = str_replace('{name}', $client->name, $opening)."\n\n- {$line}\n\n".str_replace('{name}', $client->name, $closing);
 
-                try {
-                    $resp = $this->fonnteService->sendMessage(
-                        (string) $client->whatsapp_number,
-                        $message,
-                        (string) ($signal->image_url ?? '')
-                    );
-                    $success++;
-                    $results[] = [
-                        'client' => $client->name,
-                        'whatsapp_number' => $client->whatsapp_number,
-                        'signal_id' => $signal->id,
-                        'status' => 'sent',
-                        'response' => $resp,
-                    ];
-                } catch (RuntimeException $e) {
-                    $failed++;
-                    $results[] = [
-                        'client' => $client->name,
-                        'whatsapp_number' => $client->whatsapp_number,
-                        'signal_id' => $signal->id,
-                        'status' => 'failed',
-                        'response' => $e->getMessage(),
-                    ];
-                }
-
-                if ($delaySeconds > 0 && $index < ($matched->count() - 1)) {
-                    sleep($delaySeconds);
-                }
+                $jobs[] = [
+                    'client_id' => $client->id,
+                    'tier_id' => $client->tier_id,
+                    'signal_id' => $signal->id,
+                    'client_name' => $client->name,
+                    'signal_title' => $signal->title,
+                    'whatsapp_number' => $client->whatsapp_number,
+                    'message' => $message,
+                    'image_url' => (string) ($signal->image_url ?? ''),
+                ];
             }
         }
 
-        WaBlastLog::create([
-            'admin_id' => $request->user()->id,
-            'message_template_id' => null,
-            'blast_type' => 'general',
-            'filters' => [
-                'source' => 'signal-batch-api',
-                'signal_ids' => array_values(array_unique($data['signal_ids'])),
-                'tier_id' => $data['tier_id'] ?? null,
-                'delay_seconds' => $delaySeconds,
-                'max_recipients' => $maxRecipients,
-            ],
-            'recipients_count' => $clients->count(),
-            'rendered_messages' => collect($results)->toJson(),
-            'status' => $failed > 0 ? 'partial' : 'sent',
-            'blasted_at' => now(),
-        ]);
+        if (empty($jobs)) {
+            return response()->json([
+                'message' => 'Tidak ada job blast yang cocok.',
+                'targets' => $clients->count(),
+            ]);
+        }
 
-        $sentSignalIds = collect($results)
-            ->where('status', 'sent')
-            ->pluck('signal_id')
-            ->filter()
-            ->unique()
-            ->values();
+        try {
+            $batch = DB::transaction(function () use ($request, $data, $clients, $delaySeconds, $maxRecipients, $opening, $closing, $jobs) {
+                $batch = SignalWaBlastBatch::query()->create([
+                    'admin_id' => $request->user()->id,
+                    'tier_id' => $data['tier_id'] ?? null,
+                    'signal_ids' => array_values(array_unique($data['signal_ids'])),
+                    'delay_seconds' => $delaySeconds,
+                    'max_recipients' => $maxRecipients,
+                    'opening_text' => $opening,
+                    'closing_text' => $closing,
+                    'status' => 'queued',
+                    'total_targets' => count($jobs),
+                    'pending_count' => count($jobs),
+                    'sent_count' => 0,
+                    'failed_count' => 0,
+                ]);
 
-        if ($sentSignalIds->isNotEmpty()) {
-            Signal::query()
-                ->whereIn('id', $sentSignalIds->all())
-                ->update(['wa_blasted_at' => now()]);
+                foreach (array_chunk($jobs, 300) as $chunk) {
+                    $rows = array_map(fn (array $job) => [
+                        'batch_id' => $batch->id,
+                        'client_id' => $job['client_id'],
+                        'tier_id' => $job['tier_id'],
+                        'signal_id' => $job['signal_id'],
+                        'client_name' => $job['client_name'],
+                        'signal_title' => $job['signal_title'],
+                        'whatsapp_number' => $job['whatsapp_number'],
+                        'message' => $job['message'],
+                        'image_url' => $job['image_url'] ?: null,
+                        'status' => 'pending',
+                        'attempts' => 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ], $chunk);
+                    SignalWaBlastTarget::query()->insert($rows);
+                }
+
+                WaBlastLog::create([
+                    'admin_id' => $request->user()->id,
+                    'message_template_id' => null,
+                    'blast_type' => 'general',
+                    'filters' => [
+                        'source' => 'signal-batch-api',
+                        'signal_ids' => array_values(array_unique($data['signal_ids'])),
+                        'tier_id' => $data['tier_id'] ?? null,
+                        'delay_seconds' => $delaySeconds,
+                        'max_recipients' => $maxRecipients,
+                        'queue_batch_id' => $batch->id,
+                    ],
+                    'recipients_count' => $clients->count(),
+                    'rendered_messages' => collect($jobs)->toJson(),
+                    'status' => 'queued',
+                    'blasted_at' => now(),
+                ]);
+
+                return $batch;
+            });
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Gagal membuat queue: '.$e->getMessage(),
+            ], 500);
+        }
+
+        try {
+            \Artisan::call('signals:process-wa-queue', ['--batch_id' => $batch->id]);
+        } catch (Throwable) {
+            // Silent: scheduler tetap akan memproses.
         }
 
         return response()->json([
-            'message' => 'WA blast sinyal diproses.',
-            'sent' => $success,
-            'failed' => $failed,
+            'message' => 'WA blast sinyal masuk queue.',
+            'batch_id' => $batch->id,
+            'queued_targets' => count($jobs),
             'targets' => $clients->count(),
             'settings' => [
                 'delay_seconds' => $delaySeconds,
                 'max_recipients' => $maxRecipients,
             ],
-            'results' => $results,
         ]);
     }
 

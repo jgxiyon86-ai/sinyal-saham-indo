@@ -23,3 +23,8 @@ Schedule::command('signals:cleanup-expired')
     ->dailyAt(env('SIGNAL_CLEANUP_TIME', '01:00'))
     ->withoutOverlapping()
     ->runInBackground();
+
+Schedule::command('signals:process-wa-queue')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->runInBackground();

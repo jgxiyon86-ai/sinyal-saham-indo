@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Signal;
+use App\Models\SignalWaBlastBatch;
+use App\Models\SignalWaBlastTarget;
 use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use RuntimeException;
@@ -26,6 +29,8 @@ class SignalWaBlastPageController extends Controller
 
     public function index(): View
     {
+        [$batchRows, $activeBatch, $targetRows] = $this->queueDashboardData();
+
         $logs = WaBlastLog::with('admin')
             ->where('blast_type', 'general')
             ->where(function ($query) {
@@ -49,6 +54,9 @@ class SignalWaBlastPageController extends Controller
                 'image_url' => '',
             ],
             'logs' => $logs,
+            'queueBatches' => $batchRows,
+            'activeBatch' => $activeBatch,
+            'queueTargets' => $targetRows,
         ]);
     }
 
@@ -60,6 +68,7 @@ class SignalWaBlastPageController extends Controller
             Log::error('Signal WA blast preview error', [
                 'message' => $e->getMessage(),
             ]);
+            [$batchRows, $activeBatch, $targetRows] = $this->queueDashboardData();
 
             return view('admin.signal-wa-blast', [
                 'signals' => $this->availableSignals(),
@@ -82,8 +91,13 @@ class SignalWaBlastPageController extends Controller
                     })
                     ->latest()
                     ->paginate(20),
+                'queueBatches' => $batchRows,
+                'activeBatch' => $activeBatch,
+                'queueTargets' => $targetRows,
             ])->with('status', 'Preview gagal: '.$e->getMessage());
         }
+
+        [$batchRows, $activeBatch, $targetRows] = $this->queueDashboardData();
 
         return view('admin.signal-wa-blast', [
             'signals' => $this->availableSignals(),
@@ -106,14 +120,14 @@ class SignalWaBlastPageController extends Controller
                 })
                 ->latest()
                 ->paginate(20),
+            'queueBatches' => $batchRows,
+            'activeBatch' => $activeBatch,
+            'queueTargets' => $targetRows,
         ]);
     }
 
     public function send(Request $request): RedirectResponse
     {
-        @set_time_limit(0);
-        @ignore_user_abort(true);
-
         try {
             [$payload, $targets] = $this->buildPayload($request);
         } catch (Throwable $e) {
@@ -139,105 +153,103 @@ class SignalWaBlastPageController extends Controller
             return redirect()->route('signal-wa-blast.page')->with('status', 'Tidak ada target blast.');
         }
 
-        $delaySeconds = (int) $payload['delay_seconds'];
-        $results = [];
-        $success = 0;
-        $failed = 0;
-        $targetsCount = $targets->count();
-        $sentMessagesCount = 0;
-
-        try {
-            $jobs = collect();
-            foreach ($targets as $target) {
-                foreach ($target['signal_items'] as $signalItem) {
-                    $jobs->push([
-                        'name' => $target['name'],
-                        'whatsapp_number' => $target['whatsapp_number'],
-                        'tier' => $target['tier'],
-                        'signal_id' => $signalItem['signal_id'],
-                        'signal_title' => $signalItem['signal_title'],
-                        'message' => $signalItem['message'],
-                        'image_url' => $signalItem['image_url'] ?: ($payload['image_url'] ?: null),
-                    ]);
-                }
+        $jobs = collect();
+        foreach ($targets as $target) {
+            foreach ($target['signal_items'] as $signalItem) {
+                $jobs->push([
+                    'client_name' => $target['name'],
+                    'whatsapp_number' => $target['whatsapp_number'],
+                    'tier_id' => $target['tier_id'],
+                    'client_id' => $target['client_id'],
+                    'signal_id' => $signalItem['signal_id'],
+                    'signal_title' => $signalItem['signal_title'],
+                    'message' => $signalItem['message'],
+                    'image_url' => $signalItem['image_url'] ?: ($payload['image_url'] ?: null),
+                ]);
             }
+        }
 
-            $lastIndex = $jobs->count() - 1;
-            foreach ($jobs as $index => $job) {
-                try {
-                    $response = $this->fonnteService->sendMessage(
-                        (string) $job['whatsapp_number'],
-                        (string) $job['message'],
-                        $job['image_url']
-                    );
-                    $success++;
-                    $sentMessagesCount++;
-                    $results[] = [
-                        ...$job,
-                        'status' => 'sent',
-                        'response' => $response,
-                    ];
-                } catch (RuntimeException $e) {
-                    $failed++;
-                    $results[] = [
-                        ...$job,
-                        'status' => 'failed',
-                        'response' => $e->getMessage(),
-                    ];
-                }
-
-                if ($delaySeconds > 0 && $index < $lastIndex) {
-                    sleep($delaySeconds);
-                }
-            }
-        } catch (Throwable $e) {
-            Log::error('Signal WA blast send fatal error', [
-                'message' => $e->getMessage(),
-            ]);
-
-            return redirect()->route('signal-wa-blast.page')
-                ->with('status', 'WA Blast gagal: '.$e->getMessage());
+        if ($jobs->isEmpty()) {
+            return redirect()->route('signal-wa-blast.page')->with('status', 'Tidak ada job blast yang bisa dimasukkan ke antrian.');
         }
 
         try {
-            WaBlastLog::create([
-                'admin_id' => $request->user()->id,
-                'message_template_id' => null,
-                'blast_type' => 'general',
-                'filters' => [
-                    'source' => 'signal-batch-web',
+            $batch = DB::transaction(function () use ($request, $payload, $jobs, $targets) {
+                $batch = SignalWaBlastBatch::query()->create([
+                    'admin_id' => $request->user()->id,
                     'tier_id' => $payload['tier_id'],
                     'signal_ids' => $payload['signal_ids'],
                     'delay_seconds' => $payload['delay_seconds'],
                     'max_recipients' => $payload['max_recipients'],
-                    'sent_messages' => $sentMessagesCount,
-                ],
-                'recipients_count' => $targetsCount,
-                'rendered_messages' => collect($results)->toJson(),
-                'status' => $failed > 0 ? 'partial' : 'sent',
-                'blasted_at' => now(),
-            ]);
+                    'opening_text' => $payload['opening_text'],
+                    'closing_text' => $payload['closing_text'],
+                    'image_url' => $payload['image_url'] ?: null,
+                    'status' => 'queued',
+                    'total_targets' => $jobs->count(),
+                    'pending_count' => $jobs->count(),
+                    'sent_count' => 0,
+                    'failed_count' => 0,
+                ]);
+
+                foreach ($jobs->chunk(300) as $chunk) {
+                    $rows = $chunk->map(fn (array $job) => [
+                        'batch_id' => $batch->id,
+                        'client_id' => $job['client_id'],
+                        'tier_id' => $job['tier_id'],
+                        'signal_id' => $job['signal_id'],
+                        'client_name' => $job['client_name'],
+                        'signal_title' => $job['signal_title'],
+                        'whatsapp_number' => $job['whatsapp_number'],
+                        'message' => $job['message'],
+                        'image_url' => $job['image_url'],
+                        'status' => 'pending',
+                        'attempts' => 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ])->all();
+                    SignalWaBlastTarget::query()->insert($rows);
+                }
+
+                WaBlastLog::query()->create([
+                    'admin_id' => $request->user()->id,
+                    'message_template_id' => null,
+                    'blast_type' => 'general',
+                    'filters' => [
+                        'source' => 'signal-batch-web',
+                        'tier_id' => $payload['tier_id'],
+                        'signal_ids' => $payload['signal_ids'],
+                        'delay_seconds' => $payload['delay_seconds'],
+                        'max_recipients' => $payload['max_recipients'],
+                        'queue_batch_id' => $batch->id,
+                    ],
+                    'recipients_count' => $targets->count(),
+                    'rendered_messages' => $jobs->toJson(),
+                    'status' => 'queued',
+                    'blasted_at' => now(),
+                ]);
+
+                return $batch;
+            });
         } catch (Throwable $e) {
-            Log::error('Signal WA blast log save failed', [
+            Log::error('Signal WA blast enqueue failed', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('signal-wa-blast.page')
+                ->with('status', 'Gagal memasukkan antrian blast: '.$e->getMessage());
+        }
+
+        try {
+            \Artisan::call('signals:process-wa-queue', ['--batch_id' => $batch->id]);
+        } catch (Throwable $e) {
+            Log::warning('Signal WA queue immediate processing failed', [
+                'batch_id' => $batch->id,
                 'message' => $e->getMessage(),
             ]);
         }
 
-        $sentSignalIds = collect($results)
-            ->where('status', 'sent')
-            ->pluck('signal_id')
-            ->filter()
-            ->unique()
-            ->values();
-
-        if ($sentSignalIds->isNotEmpty()) {
-            Signal::query()
-                ->whereIn('id', $sentSignalIds->all())
-                ->update(['wa_blasted_at' => now()]);
-        }
-
-        return redirect()->route('signal-wa-blast.page')
-            ->with('status', "WA Blast Sinyal selesai. Berhasil: {$success}, Gagal: {$failed}, Target: {$targetsCount}, Pesan terkirim: {$sentMessagesCount}.");
+        return redirect()->route('signal-wa-blast.page', ['batch_id' => $batch->id])
+            ->with('status', "WA Blast masuk antrian. Batch #{$batch->id}, total job: {$batch->total_targets}. Proses bertahap sesuai limit tier.");
     }
 
     private function availableSignals(): Collection
@@ -345,7 +357,9 @@ class SignalWaBlastPageController extends Controller
 
             return [
                 'name' => $client->name,
+                'client_id' => $client->id,
                 'whatsapp_number' => $client->whatsapp_number,
+                'tier_id' => $client->tier_id,
                 'tier' => optional($client->tier)->name,
                 'signals_count' => $matchedSignals->count(),
                 'signal_ids' => $matchedSignals->pluck('id')->values()->all(),
@@ -387,5 +401,27 @@ class SignalWaBlastPageController extends Controller
         }
 
         return collect($accepted)->values();
+    }
+
+    private function queueDashboardData(?int $batchId = null): array
+    {
+        $batchId = $batchId ?? (int) request('batch_id', 0);
+
+        $batchRows = SignalWaBlastBatch::query()
+            ->with('admin:id,name')
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        $activeBatch = $batchId > 0
+            ? SignalWaBlastBatch::query()->with('admin:id,name')->find($batchId)
+            : $batchRows->first();
+
+        $targetRows = SignalWaBlastTarget::query()
+            ->when($activeBatch, fn ($query) => $query->where('batch_id', $activeBatch->id))
+            ->orderBy('id')
+            ->paginate(40, ['*'], 'targets_page');
+
+        return [$batchRows, $activeBatch, $targetRows];
     }
 }

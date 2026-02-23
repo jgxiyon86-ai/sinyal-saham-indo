@@ -131,7 +131,7 @@
                 <input type="hidden" name="opening_text" value="{{ $settings['opening_text'] }}">
                 <input type="hidden" name="closing_text" value="{{ $settings['closing_text'] }}">
                 <input type="hidden" name="image_url" value="{{ $settings['image_url'] }}">
-                <button id="btn-send-submit" class="btn" type="submit" onclick="return confirm('Kirim WA Blast Sinyal sekarang?')">Kirim WA Blast Sinyal</button>
+                <button id="btn-send-submit" class="btn" type="submit" onclick="return confirm('Masukkan WA Blast Sinyal ke antrian sekarang?')">Queue WA Blast Sinyal</button>
             </form>
 
             <div class="table-wrap">
@@ -156,6 +156,63 @@
             </div>
         </div>
     @endif
+
+    <div class="panel">
+        <h3 style="margin:0 0 6px;">Status Queue Blast</h3>
+        <div class="table-wrap" style="margin-bottom:10px;">
+            <table>
+                <thead><tr><th>Batch</th><th>Waktu</th><th>Status</th><th>Total</th><th>Pending</th><th>Sent</th><th>Failed</th><th>Aksi</th></tr></thead>
+                <tbody>
+                @forelse($queueBatches as $batch)
+                    <tr>
+                        <td>#{{ $batch->id }}</td>
+                        <td>{{ $batch->created_at?->format('Y-m-d H:i') }}</td>
+                        <td>{{ strtoupper($batch->status) }}</td>
+                        <td>{{ $batch->total_targets }}</td>
+                        <td>{{ $batch->pending_count }}</td>
+                        <td>{{ $batch->sent_count }}</td>
+                        <td>{{ $batch->failed_count }}</td>
+                        <td><a class="btn btn-muted" href="{{ route('signal-wa-blast.page', ['batch_id' => $batch->id]) }}" style="text-decoration:none;">Lihat Target</a></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="8">Belum ada queue blast.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin:0 0 6px;">Status per Target {{ $activeBatch ? "(Batch #{$activeBatch->id})" : '' }}</h3>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>ID</th><th>Nama</th><th>Nomor</th><th>Sinyal</th><th>Status</th><th>Percobaan</th><th>Error/Response</th><th>Waktu</th></tr></thead>
+                <tbody>
+                @forelse($queueTargets as $target)
+                    <tr>
+                        <td>{{ $target->id }}</td>
+                        <td>{{ $target->client_name }}</td>
+                        <td>{{ $target->whatsapp_number }}</td>
+                        <td>{{ $target->signal_title ?? '-' }}</td>
+                        <td>{{ strtoupper($target->status) }}</td>
+                        <td>{{ $target->attempts }}</td>
+                        <td style="max-width:380px;white-space:normal;word-break:break-word;">
+                            @if($target->status === 'failed')
+                                {{ $target->last_error }}
+                            @elseif($target->status === 'sent')
+                                {{ is_array($target->response_payload) ? 'success' : '-' }}
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>{{ $target->sent_at?->format('Y-m-d H:i:s') ?? '-' }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="8">Belum ada data target.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">{{ $queueTargets->links() }}</div>
+    </div>
 
     <div class="panel">
         <h3 style="margin:0 0 6px;">Riwayat WA Blast Sinyal</h3>
@@ -276,8 +333,18 @@
                 sendButton.disabled = true;
                 sendButton.textContent = 'Mengirim...';
             }
-            showLoading('Sedang mengirim WA Blast Sinyal...');
+            showLoading('Menyimpan antrian WA Blast Sinyal...');
         });
+    }
+})();
+
+(function () {
+    const activeBatch = @json($activeBatch ? ['id' => $activeBatch->id, 'pending' => $activeBatch->pending_count, 'status' => $activeBatch->status] : null);
+    if (!activeBatch) return;
+    if ((activeBatch.pending || 0) > 0 || activeBatch.status === 'queued' || activeBatch.status === 'processing') {
+        setTimeout(() => {
+            window.location.reload();
+        }, 10000);
     }
 })();
 </script>
