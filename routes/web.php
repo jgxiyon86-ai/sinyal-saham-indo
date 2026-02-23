@@ -67,8 +67,10 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::get('/login-theme', [LoginThemePageController::class, 'index'])->name('login-theme.page');
     Route::post('/login-theme/login', [LoginThemePageController::class, 'updateLogin'])->name('login-theme.login.update');
     Route::post('/login-theme/panel', [LoginThemePageController::class, 'updatePanel'])->name('login-theme.panel.update');
-    Route::get('/gateway-settings', [GatewaySettingPageController::class, 'index'])->name('gateway-settings.page');
-    Route::post('/gateway-settings', [GatewaySettingPageController::class, 'update'])->name('gateway-settings.update');
+    Route::get('/wa-config', [GatewaySettingPageController::class, 'index'])->name('gateway-settings.page');
+    Route::post('/wa-config', [GatewaySettingPageController::class, 'update'])->name('gateway-settings.update');
+    Route::get('/gateway-settings', [GatewaySettingPageController::class, 'index']);
+    Route::post('/gateway-settings', [GatewaySettingPageController::class, 'update']);
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
