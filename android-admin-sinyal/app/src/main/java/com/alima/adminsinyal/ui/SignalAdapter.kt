@@ -8,6 +8,7 @@ import com.alima.adminsinyal.databinding.ItemSignalBinding
 
 class SignalAdapter(
     private val onBlastClick: (SignalItem) -> Unit,
+    private val onDeleteClick: (SignalItem) -> Unit,
     private val onSelectionChanged: (Int) -> Unit,
 ) : RecyclerView.Adapter<SignalAdapter.SignalViewHolder>() {
 
@@ -46,7 +47,8 @@ class SignalAdapter(
         fun bind(item: SignalItem) {
             binding.tvTitle.text = "${item.title ?: "-"} (#${item.id})"
             binding.tvMeta.text = "${item.stock_code ?: "-"} | ${item.signal_type ?: "-"}"
-            binding.tvPublish.text = item.published_at ?: "Belum publish"
+            binding.tvPublish.text = "Publish: ${item.published_at ?: "-"}"
+            binding.tvExpired.text = "Expired: ${item.expires_at ?: "-"}"
             binding.tvNote.text = item.note ?: "-"
             binding.cbSelect.setOnCheckedChangeListener(null)
             binding.cbSelect.isChecked = selectedIds.contains(item.id)
@@ -59,6 +61,7 @@ class SignalAdapter(
                 onSelectionChanged(selectedIds.size)
             }
             binding.btnBlastThis.setOnClickListener { onBlastClick(item) }
+            binding.btnDeleteThis.setOnClickListener { onDeleteClick(item) }
         }
     }
 }

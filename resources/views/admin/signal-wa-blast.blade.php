@@ -80,7 +80,7 @@
 
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th style="width:40px;">Pilih</th><th>Judul</th><th>Kode</th><th>Tipe</th><th>Tier</th><th>Publikasi</th></tr></thead>
+                    <thead><tr><th style="width:40px;">Pilih</th><th>Judul</th><th>Kode</th><th>Tipe</th><th>Tier</th><th>Publikasi</th><th>Expired</th><th>Aksi</th></tr></thead>
                     <tbody>
                     @forelse($signals as $signal)
                         <tr>
@@ -93,9 +93,17 @@
                             <td>{{ strtoupper($signal->signal_type) }}</td>
                             <td>{{ $signal->tiers->pluck('name')->implode(', ') }}</td>
                             <td>{{ $signal->published_at?->format('Y-m-d H:i') }}</td>
+                            <td>{{ $signal->expires_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                            <td>
+                                <form method="POST" action="{{ route('signals.destroy', $signal) }}" onsubmit="return confirm('Hapus sinyal ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6">Belum ada sinyal aktif untuk diblast.</td></tr>
+                        <tr><td colspan="8">Belum ada sinyal aktif untuk diblast.</td></tr>
                     @endforelse
                     </tbody>
                 </table>

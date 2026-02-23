@@ -69,9 +69,9 @@ class SignalPageController extends Controller
             ]);
             $signal->tiers()->sync($tierIds);
 
-            return redirect()->route('signals.page')->with(
+            return redirect()->route('signals.create')->with(
                 'status',
-                'Sinyal berhasil ditambahkan. Push akan dikirim otomatis sesuai tanggal publikasi.'
+                'Sinyal berhasil ditambahkan. Form sudah dibersihkan, lanjut input sinyal berikutnya.'
             );
         } catch (ValidationException $e) {
             throw $e;
@@ -129,9 +129,9 @@ class SignalPageController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'stock_code' => ['required', 'string', 'max:20'],
             'signal_type' => ['required', Rule::in(['buy', 'sell', 'hold'])],
-            'entry_price' => ['nullable', 'numeric', 'min:0'],
-            'take_profit' => ['nullable', 'numeric', 'min:0'],
-            'stop_loss' => ['nullable', 'numeric', 'min:0'],
+            'entry_price' => ['nullable', 'integer', 'min:0'],
+            'take_profit' => ['nullable', 'integer', 'min:0'],
+            'stop_loss' => ['nullable', 'integer', 'min:0'],
             'note' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url', 'max:500'],
             'published_at' => ['nullable', 'date'],

@@ -25,9 +25,9 @@
                         @endforeach
                     </select>
                 </div>
-                <div><label>Entry</label><input type="number" step="0.01" name="entry_price" value="{{ old('entry_price', $signal->entry_price ?? '') }}"></div>
-                <div><label>Take Profit</label><input type="number" step="0.01" name="take_profit" value="{{ old('take_profit', $signal->take_profit ?? '') }}"></div>
-                <div><label>Stop Loss</label><input type="number" step="0.01" name="stop_loss" value="{{ old('stop_loss', $signal->stop_loss ?? '') }}"></div>
+                <div><label>Entry</label><input type="number" step="1" min="0" inputmode="numeric" name="entry_price" value="{{ old('entry_price', $signal->entry_price ?? '') }}"></div>
+                <div><label>Take Profit</label><input type="number" step="1" min="0" inputmode="numeric" name="take_profit" value="{{ old('take_profit', $signal->take_profit ?? '') }}"></div>
+                <div><label>Stop Loss</label><input type="number" step="1" min="0" inputmode="numeric" name="stop_loss" value="{{ old('stop_loss', $signal->stop_loss ?? '') }}"></div>
                 <div style="grid-column:1/-1;">
                     <label>Image URL Sinyal (opsional)</label>
                     <input id="signal-image-url" type="url" name="image_url" value="{{ old('image_url', $signal->image_url ?? '') }}" placeholder="https://domain.com/signal.jpg">

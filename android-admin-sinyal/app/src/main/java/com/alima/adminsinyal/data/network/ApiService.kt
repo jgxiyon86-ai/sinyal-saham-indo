@@ -10,9 +10,11 @@ import com.alima.adminsinyal.data.model.SignalWaBlastResponse
 import com.alima.adminsinyal.data.model.TierListResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface ApiService {
     @POST("auth/login")
@@ -36,6 +38,12 @@ interface ApiService {
     suspend fun getSignals(
         @Header("Authorization") bearerToken: String,
     ): Response<SignalListResponse>
+
+    @DELETE("admin/signals/{id}")
+    suspend fun deleteSignal(
+        @Header("Authorization") bearerToken: String,
+        @Path("id") id: Int,
+    ): Response<Map<String, String>>
 
     @GET("admin/tiers")
     suspend fun getTiers(

@@ -23,18 +23,20 @@ data class AdminCreateSignalRequest(
     val title: String,
     val stock_code: String,
     val signal_type: String,
-    val entry_price: String,
-    val take_profit: String,
-    val stop_loss: String,
+    val entry_price: Int? = null,
+    val take_profit: Int? = null,
+    val stop_loss: Int? = null,
     val note: String? = null,
     val image_url: String? = null,
+    val published_at: String? = null,
+    val expires_at: String? = null,
     val tier_target: String? = null,
     val tier_ids: List<Int>? = null,
 )
 
 data class AdminCreateSignalResponse(
     val message: String? = null,
-    val id: Int? = null,
+    val signal: SignalItem? = null,
 )
 
 data class SignalWaBlastRequest(
@@ -54,12 +56,17 @@ data class SignalItem(
     val stock_code: String? = null,
     val signal_type: String? = null,
     val published_at: String? = null,
+    val expires_at: String? = null,
     val note: String? = null,
 )
 
 data class SignalListResponse(
-    val data: List<SignalItem>? = null,
+    val signals: SignalPage? = null,
     val message: String? = null,
+)
+
+data class SignalPage(
+    val data: List<SignalItem>? = null,
 )
 
 data class TierItem(

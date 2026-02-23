@@ -111,6 +111,9 @@ class SignalWaBlastPageController extends Controller
 
     public function send(Request $request): RedirectResponse
     {
+        @set_time_limit(0);
+        @ignore_user_abort(true);
+
         try {
             [$payload, $targets] = $this->buildPayload($request);
         } catch (Throwable $e) {
@@ -144,50 +147,46 @@ class SignalWaBlastPageController extends Controller
         $sentMessagesCount = 0;
 
         try {
+            $jobs = collect();
             foreach ($targets as $target) {
-                foreach ($target['signal_items'] as $itemIndex => $signalItem) {
-                    $imageToSend = $signalItem['image_url'] ?: ($payload['image_url'] ?: null);
-                    try {
-                        $response = $this->fonnteService->sendMessage(
-                            (string) $target['whatsapp_number'],
-                            (string) $signalItem['message'],
-                            $imageToSend
-                        );
-                        $success++;
-                        $sentMessagesCount++;
-                        $results[] = [
-                            'name' => $target['name'],
-                            'whatsapp_number' => $target['whatsapp_number'],
-                            'tier' => $target['tier'],
-                            'signal_id' => $signalItem['signal_id'],
-                            'signal_title' => $signalItem['signal_title'],
-                            'message' => $signalItem['message'],
-                            'image_url' => $imageToSend,
-                            'status' => 'sent',
-                            'response' => $response,
-                        ];
-                    } catch (RuntimeException $e) {
-                        $failed++;
-                        $results[] = [
-                            'name' => $target['name'],
-                            'whatsapp_number' => $target['whatsapp_number'],
-                            'tier' => $target['tier'],
-                            'signal_id' => $signalItem['signal_id'],
-                            'signal_title' => $signalItem['signal_title'],
-                            'message' => $signalItem['message'],
-                            'image_url' => $imageToSend,
-                            'status' => 'failed',
-                            'response' => $e->getMessage(),
-                        ];
-                    }
+                foreach ($target['signal_items'] as $signalItem) {
+                    $jobs->push([
+                        'name' => $target['name'],
+                        'whatsapp_number' => $target['whatsapp_number'],
+                        'tier' => $target['tier'],
+                        'signal_id' => $signalItem['signal_id'],
+                        'signal_title' => $signalItem['signal_title'],
+                        'message' => $signalItem['message'],
+                        'image_url' => $signalItem['image_url'] ?: ($payload['image_url'] ?: null),
+                    ]);
+                }
+            }
 
-                    $isLastMessage = $itemIndex === (count($target['signal_items']) - 1);
-                    if (! $isLastMessage && $delaySeconds > 0) {
-                        sleep($delaySeconds);
-                    }
+            $lastIndex = $jobs->count() - 1;
+            foreach ($jobs as $index => $job) {
+                try {
+                    $response = $this->fonnteService->sendMessage(
+                        (string) $job['whatsapp_number'],
+                        (string) $job['message'],
+                        $job['image_url']
+                    );
+                    $success++;
+                    $sentMessagesCount++;
+                    $results[] = [
+                        ...$job,
+                        'status' => 'sent',
+                        'response' => $response,
+                    ];
+                } catch (RuntimeException $e) {
+                    $failed++;
+                    $results[] = [
+                        ...$job,
+                        'status' => 'failed',
+                        'response' => $e->getMessage(),
+                    ];
                 }
 
-                if ($delaySeconds > 0) {
+                if ($delaySeconds > 0 && $index < $lastIndex) {
                     sleep($delaySeconds);
                 }
             }
@@ -200,23 +199,29 @@ class SignalWaBlastPageController extends Controller
                 ->with('status', 'WA Blast gagal: '.$e->getMessage());
         }
 
-        WaBlastLog::create([
-            'admin_id' => $request->user()->id,
-            'message_template_id' => null,
-            'blast_type' => 'general',
-            'filters' => [
-                'source' => 'signal-batch-web',
-                'tier_id' => $payload['tier_id'],
-                'signal_ids' => $payload['signal_ids'],
-                'delay_seconds' => $payload['delay_seconds'],
-                'max_recipients' => $payload['max_recipients'],
-                'sent_messages' => $sentMessagesCount,
-            ],
-            'recipients_count' => $targetsCount,
-            'rendered_messages' => collect($results)->toJson(),
-            'status' => $failed > 0 ? 'partial' : 'sent',
-            'blasted_at' => now(),
-        ]);
+        try {
+            WaBlastLog::create([
+                'admin_id' => $request->user()->id,
+                'message_template_id' => null,
+                'blast_type' => 'general',
+                'filters' => [
+                    'source' => 'signal-batch-web',
+                    'tier_id' => $payload['tier_id'],
+                    'signal_ids' => $payload['signal_ids'],
+                    'delay_seconds' => $payload['delay_seconds'],
+                    'max_recipients' => $payload['max_recipients'],
+                    'sent_messages' => $sentMessagesCount,
+                ],
+                'recipients_count' => $targetsCount,
+                'rendered_messages' => collect($results)->toJson(),
+                'status' => $failed > 0 ? 'partial' : 'sent',
+                'blasted_at' => now(),
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Signal WA blast log save failed', [
+                'message' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()->route('signal-wa-blast.page')
             ->with('status', "WA Blast Sinyal selesai. Berhasil: {$success}, Gagal: {$failed}, Target: {$targetsCount}, Pesan terkirim: {$sentMessagesCount}.");
@@ -228,13 +233,12 @@ class SignalWaBlastPageController extends Controller
 
         return Signal::query()
             ->with('tiers:id,name')
-            ->whereNotNull('published_at')
-            ->where('published_at', '<=', $now)
             ->where(function ($query) use ($now) {
                 $query->whereNull('expires_at')
                     ->orWhere('expires_at', '>=', $now);
             })
-            ->latest('published_at')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
             ->limit(120)
             ->get();
     }
@@ -295,9 +299,9 @@ class SignalWaBlastPageController extends Controller
             $signalLines = $matchedSignals->map(function (Signal $signal) {
                 $type = strtoupper((string) $signal->signal_type);
                 $code = strtoupper((string) $signal->stock_code);
-                $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 2, '.', ',') : '-';
-                $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 2, '.', ',') : '-';
-                $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 2, '.', ',') : '-';
+                $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 0, '.', ',') : '-';
+                $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 0, '.', ',') : '-';
+                $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 0, '.', ',') : '-';
 
                 return "- {$code} {$type} | Entry {$entry} | TP {$tp} | SL {$sl}";
             })->implode("\n");
@@ -309,9 +313,9 @@ class SignalWaBlastPageController extends Controller
             $signalItems = $matchedSignals->map(function (Signal $signal) use ($client, $payload) {
                 $type = strtoupper((string) $signal->signal_type);
                 $code = strtoupper((string) $signal->stock_code);
-                $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 2, '.', ',') : '-';
-                $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 2, '.', ',') : '-';
-                $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 2, '.', ',') : '-';
+                $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 0, '.', ',') : '-';
+                $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 0, '.', ',') : '-';
+                $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 0, '.', ',') : '-';
                 $line = "{$code} {$type} | Entry {$entry} | TP {$tp} | SL {$sl}";
                 $header = str_replace('{name}', $client->name, $payload['opening_text']);
                 $footer = str_replace('{name}', $client->name, $payload['closing_text']);
