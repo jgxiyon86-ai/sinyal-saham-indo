@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Signal;
+use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
 use App\Services\FonnteService;
 use App\Support\GatewaySetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use RuntimeException;
 
 class SignalWaBlastController extends Controller
@@ -53,7 +55,8 @@ class SignalWaBlastController extends Controller
             $clientsQuery->where('tier_id', $data['tier_id']);
         }
 
-        $clients = $clientsQuery->limit($maxRecipients)->get();
+        $clients = $clientsQuery->limit(1500)->get();
+        $clients = $this->applyTierBlastLimit($clients)->take($maxRecipients)->values();
 
         $success = 0;
         $failed = 0;
@@ -142,5 +145,34 @@ class SignalWaBlastController extends Controller
             ],
             'results' => $results,
         ]);
+    }
+
+    private function applyTierBlastLimit(Collection $clients): Collection
+    {
+        $tierLimits = Tier::query()
+            ->pluck('wa_blast_limit', 'id')
+            ->map(fn ($value) => max(1, (int) $value))
+            ->all();
+
+        $bucket = [];
+        $accepted = [];
+
+        foreach ($clients as $client) {
+            $tierId = (int) ($client->tier_id ?? 0);
+            if ($tierId <= 0) {
+                continue;
+            }
+
+            $limit = $tierLimits[$tierId] ?? 60;
+            $current = $bucket[$tierId] ?? 0;
+            if ($current >= $limit) {
+                continue;
+            }
+
+            $accepted[] = $client;
+            $bucket[$tierId] = $current + 1;
+        }
+
+        return collect($accepted);
     }
 }

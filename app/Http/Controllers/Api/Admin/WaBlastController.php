@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MessageTemplate;
+use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
 use App\Services\FonnteService;
@@ -13,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use RuntimeException;
@@ -38,8 +40,10 @@ class WaBlastController extends Controller
             $query->where('religion', $request->string('religion'));
         }
 
+        $targets = $this->applyTierBlastLimit($query->get($this->targetColumns()));
+
         return response()->json([
-            'targets' => $query->get($this->targetColumns()),
+            'targets' => $targets->values(),
         ]);
     }
 
@@ -61,9 +65,11 @@ class WaBlastController extends Controller
             $query->where('religion', $request->string('religion'));
         }
 
+        $targets = $this->applyTierBlastLimit($query->get($this->targetColumns()));
+
         return response()->json([
             'date' => $date->toDateString(),
-            'targets' => $query->get($this->targetColumns()),
+            'targets' => $targets->values(),
         ]);
     }
 
@@ -81,9 +87,11 @@ class WaBlastController extends Controller
             $query->where('tier_id', $data['tier_id']);
         }
 
+        $targets = $this->applyTierBlastLimit($query->get($this->targetColumns()));
+
         return response()->json([
             'religion' => $data['religion'],
-            'targets' => $query->get($this->targetColumns()),
+            'targets' => $targets->values(),
         ]);
     }
 
@@ -122,7 +130,7 @@ class WaBlastController extends Controller
                 ->whereDay('birth_date', $date->day);
         }
 
-        $targets = $query->get($this->targetColumns());
+        $targets = $this->applyTierBlastLimit($query->get($this->targetColumns()));
         $rendered = $targets->map(function (User $client) use ($template, $date) {
             return [
                 'client_id' => $client->id,
@@ -266,6 +274,35 @@ class WaBlastController extends Controller
             'birth_date',
             'religion',
         ];
+    }
+
+    private function applyTierBlastLimit(Collection $clients): Collection
+    {
+        $tierLimits = Tier::query()
+            ->pluck('wa_blast_limit', 'id')
+            ->map(fn ($value) => max(1, (int) $value))
+            ->all();
+
+        $bucket = [];
+        $accepted = [];
+
+        foreach ($clients as $client) {
+            $tierId = (int) ($client->tier_id ?? 0);
+            if ($tierId <= 0) {
+                continue;
+            }
+
+            $limit = $tierLimits[$tierId] ?? 60;
+            $current = $bucket[$tierId] ?? 0;
+            if ($current >= $limit) {
+                continue;
+            }
+
+            $accepted[] = $client;
+            $bucket[$tierId] = $current + 1;
+        }
+
+        return collect($accepted);
     }
 
     private function renderTemplate(string $content, User $client, Carbon $date): string

@@ -13,7 +13,7 @@
     <div class="table-wrap">
         <table>
             <thead>
-            <tr><th>Nama</th><th>Min Modal</th><th>Max Modal</th><th>Jumlah Klient</th><th>Aksi</th></tr>
+            <tr><th>Nama</th><th>Min Modal</th><th>Max Modal</th><th>Batas WA Blast</th><th>Jumlah Klient</th><th>Aksi</th></tr>
             </thead>
             <tbody>
             @forelse($tiers as $tier)
@@ -21,6 +21,7 @@
                     <td>{{ $tier->name }}</td>
                     <td>{{ number_format((float)$tier->min_capital, 0, ',', '.') }}</td>
                     <td>{{ $tier->max_capital ? number_format((float)$tier->max_capital, 0, ',', '.') : 'Tanpa Batas' }}</td>
+                    <td>{{ (int) $tier->wa_blast_limit }} klient</td>
                     <td>{{ $tier->clients_count }}</td>
                     <td>
                         <div class="actions">
@@ -34,7 +35,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="5">Belum ada tier.</td></tr>
+                <tr><td colspan="6">Belum ada tier.</td></tr>
             @endforelse
             </tbody>
         </table>

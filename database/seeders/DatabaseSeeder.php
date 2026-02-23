@@ -18,9 +18,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $tiers = collect([
-            ['name' => 'Starter', 'min_capital' => 0, 'max_capital' => 9999999, 'description' => 'Tier awal untuk modal kecil.'],
-            ['name' => 'Growth', 'min_capital' => 10000000, 'max_capital' => 49999999, 'description' => 'Tier menengah dengan akses sinyal lebih luas.'],
-            ['name' => 'Priority', 'min_capital' => 50000000, 'max_capital' => null, 'description' => 'Tier prioritas untuk modal besar.'],
+            ['name' => 'Starter', 'min_capital' => 0, 'max_capital' => 9999999, 'description' => 'Tier awal untuk modal kecil.', 'wa_blast_limit' => 40],
+            ['name' => 'Growth', 'min_capital' => 10000000, 'max_capital' => 49999999, 'description' => 'Tier menengah dengan akses sinyal lebih luas.', 'wa_blast_limit' => 60],
+            ['name' => 'Priority', 'min_capital' => 50000000, 'max_capital' => null, 'description' => 'Tier prioritas untuk modal besar.', 'wa_blast_limit' => 80],
         ])->map(function (array $tierData) {
             return Tier::updateOrCreate(
                 ['name' => $tierData['name']],

@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -266,8 +267,10 @@ class WaBlastPageController extends Controller
                 ->whereDay('birth_date', $date->day);
         }
 
-        $clients = $clientsQuery->with('tier')->limit(200)->get();
-        $messages = $clients->map(function (User $client) use ($template, $date) {
+        $clients = $clientsQuery->with('tier')->limit(1500)->get();
+        $limitedClients = $this->applyTierBlastLimit($clients);
+
+        $messages = $limitedClients->map(function (User $client) use ($template, $date) {
             return [
                 'name' => $client->name,
                 'whatsapp_number' => $client->whatsapp_number,
@@ -279,6 +282,35 @@ class WaBlastPageController extends Controller
         });
 
         return [$data, $template, $date, $messages];
+    }
+
+    private function applyTierBlastLimit(Collection $clients): Collection
+    {
+        $tierLimits = Tier::query()
+            ->pluck('wa_blast_limit', 'id')
+            ->map(fn ($value) => max(1, (int) $value))
+            ->all();
+
+        $bucket = [];
+        $accepted = [];
+
+        foreach ($clients as $client) {
+            $tierId = (int) ($client->tier_id ?? 0);
+            if ($tierId <= 0) {
+                continue;
+            }
+
+            $limit = $tierLimits[$tierId] ?? 60;
+            $current = $bucket[$tierId] ?? 0;
+            if ($current >= $limit) {
+                continue;
+            }
+
+            $accepted[] = $client;
+            $bucket[$tierId] = $current + 1;
+        }
+
+        return collect($accepted)->values();
     }
 
     private function baseClientQuery(): Builder

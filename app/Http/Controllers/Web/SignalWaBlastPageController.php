@@ -299,6 +299,7 @@ class SignalWaBlastPageController extends Controller
         }
 
         $clients = $clientsQuery->with('tier:id,name')->limit(1500)->get();
+        $clients = $this->applyTierBlastLimit($clients);
 
         $targets = $clients->map(function (User $client) use ($signals, $payload) {
             $matchedSignals = $signals->filter(function (Signal $signal) use ($client) {
@@ -357,5 +358,34 @@ class SignalWaBlastPageController extends Controller
             ->values();
 
         return [$payload, $targets];
+    }
+
+    private function applyTierBlastLimit(Collection $clients): \Illuminate\Support\Collection
+    {
+        $tierLimits = Tier::query()
+            ->pluck('wa_blast_limit', 'id')
+            ->map(fn ($value) => max(1, (int) $value))
+            ->all();
+
+        $bucket = [];
+        $accepted = [];
+
+        foreach ($clients as $client) {
+            $tierId = (int) ($client->tier_id ?? 0);
+            if ($tierId <= 0) {
+                continue;
+            }
+
+            $limit = $tierLimits[$tierId] ?? 60;
+            $current = $bucket[$tierId] ?? 0;
+            if ($current >= $limit) {
+                continue;
+            }
+
+            $accepted[] = $client;
+            $bucket[$tierId] = $current + 1;
+        }
+
+        return collect($accepted)->values();
     }
 }

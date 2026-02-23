@@ -18,6 +18,7 @@
                 <div><label>Nama Tier</label><input name="name" value="{{ old('name', $tier->name ?? '') }}" required></div>
                 <div><label>Min Modal</label><input type="number" step="0.01" name="min_capital" value="{{ old('min_capital', $tier->min_capital ?? '') }}" required></div>
                 <div><label>Max Modal (opsional)</label><input type="number" step="0.01" name="max_capital" value="{{ old('max_capital', $tier->max_capital ?? '') }}"></div>
+                <div><label>Batas WA Blast per Tier</label><input type="number" min="1" max="5000" name="wa_blast_limit" value="{{ old('wa_blast_limit', $tier->wa_blast_limit ?? 60) }}" required></div>
                 <div style="grid-column:1/-1;"><label>Deskripsi</label><textarea name="description">{{ old('description', $tier->description ?? '') }}</textarea></div>
             </div>
             <div style="margin-top:10px;display:flex;gap:8px;">

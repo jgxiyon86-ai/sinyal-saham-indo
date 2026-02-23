@@ -23,6 +23,7 @@ class TierController extends Controller
             'min_capital' => ['required', 'numeric', 'min:0'],
             'max_capital' => ['nullable', 'numeric', 'gte:min_capital'],
             'description' => ['nullable', 'string'],
+            'wa_blast_limit' => ['required', 'integer', 'min:1', 'max:5000'],
         ]);
 
         $tier = Tier::create($data);
@@ -47,6 +48,7 @@ class TierController extends Controller
             'min_capital' => ['required', 'numeric', 'min:0'],
             'max_capital' => ['nullable', 'numeric', 'gte:min_capital'],
             'description' => ['nullable', 'string'],
+            'wa_blast_limit' => ['required', 'integer', 'min:1', 'max:5000'],
         ]);
 
         $tier->update($data);

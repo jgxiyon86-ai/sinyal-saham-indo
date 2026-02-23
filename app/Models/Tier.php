@@ -13,6 +13,7 @@ class Tier extends Model
         'min_capital',
         'max_capital',
         'description',
+        'wa_blast_limit',
     ];
 
     protected function casts(): array
@@ -20,6 +21,7 @@ class Tier extends Model
         return [
             'min_capital' => 'decimal:2',
             'max_capital' => 'decimal:2',
+            'wa_blast_limit' => 'integer',
         ];
     }
 
