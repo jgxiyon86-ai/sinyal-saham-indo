@@ -85,7 +85,6 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun setupActions() {
         binding.btnCreateSignal.setOnClickListener { createSignal() }
-        binding.btnSendBlast.setOnClickListener { sendBlastBulk() }
         binding.btnSendSelected.setOnClickListener { sendBlastSelected() }
         binding.btnRefreshSignals.setOnClickListener { fetchSignals() }
         binding.btnLogout.setOnClickListener { logout() }
@@ -97,7 +96,6 @@ class DashboardActivity : AppCompatActivity() {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
         binding.spSignalTier.adapter = adapter
-        binding.spBlastTier.adapter = adapter
 
         val signalTypeAdapter = ArrayAdapter(
             this,
@@ -122,7 +120,6 @@ class DashboardActivity : AppCompatActivity() {
                         setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     }
                     binding.spSignalTier.adapter = adapter
-                    binding.spBlastTier.adapter = adapter
                 } else {
                     binding.tvResult.text = "Gagal load tier (${resp.code()})"
                 }
@@ -205,17 +202,6 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendBlastBulk() {
-        val signalIds = parseIntList(binding.etSignalIds.text.toString())
-        if (signalIds.isEmpty()) {
-            toast("Isi Signal IDs dulu")
-            return
-        }
-
-        val tier = selectedBlastTierId()
-        sendBlast(SignalWaBlastRequest(signal_ids = signalIds, tier_id = tier), "bulk")
-    }
-
     private fun sendBlastSelected() {
         val selectedIds = signalAdapter.getSelectedSignalIds()
         if (selectedIds.isEmpty()) {
@@ -223,12 +209,12 @@ class DashboardActivity : AppCompatActivity() {
             return
         }
 
-        val tier = selectedBlastTierId()
-        sendBlast(SignalWaBlastRequest(signal_ids = selectedIds, tier_id = tier), "selected")
+        val tier = selectedSignalTierIdOrNull()
+        sendBlast(SignalWaBlastRequest(signal_ids = selectedIds, tier_id = tier), "terpilih")
     }
 
     private fun blastSingleSignal(item: SignalItem) {
-        val tier = selectedBlastTierId()
+        val tier = selectedSignalTierIdOrNull()
         sendBlast(SignalWaBlastRequest(signal_ids = listOf(item.id), tier_id = tier), "signal #${item.id}")
     }
 
@@ -239,8 +225,11 @@ class DashboardActivity : AppCompatActivity() {
                 val resp = RetrofitClient.api.sendWaBlast(bearer(), request)
                 if (resp.isSuccessful) {
                     val body = resp.body()
-                    binding.tvResult.text = "Blast $mode sukses. Sent=${body?.sent ?: 0}, Failed=${body?.failed ?: 0}"
-                    if (mode == "selected") {
+                    val message = body?.message?.ifBlank { "Queue blast diproses." } ?: "Queue blast diproses."
+                    val batch = body?.batch_id?.let { "#$it" } ?: "-"
+                    val queued = body?.queued_targets ?: 0
+                    binding.tvResult.text = "Blast $mode: $message Batch=$batch, queued=$queued"
+                    if (mode == "terpilih") {
                         signalAdapter.clearSelection()
                     }
                 } else {
@@ -280,14 +269,6 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun parseIntList(raw: String): List<Int> {
-        return raw.split(",")
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .mapNotNull { it.toIntOrNull() }
-            .distinct()
-    }
-
     private fun bearer(): String = "Bearer ${sessionManager.getToken()}"
 
     private fun selectedSignalTierTarget(): String {
@@ -295,8 +276,8 @@ class DashboardActivity : AppCompatActivity() {
         return if (index <= 0) "all" else tiers.getOrNull(index - 1)?.id?.toString() ?: "all"
     }
 
-    private fun selectedBlastTierId(): Int? {
-        val index = binding.spBlastTier.selectedItemPosition
+    private fun selectedSignalTierIdOrNull(): Int? {
+        val index = binding.spSignalTier.selectedItemPosition
         return if (index <= 0) null else tiers.getOrNull(index - 1)?.id
     }
 
@@ -332,7 +313,6 @@ class DashboardActivity : AppCompatActivity() {
     private fun setLoading(isLoading: Boolean) {
         binding.progress.visibility = if (isLoading) android.view.View.VISIBLE else android.view.View.GONE
         binding.btnCreateSignal.isEnabled = !isLoading
-        binding.btnSendBlast.isEnabled = !isLoading
         binding.btnSendSelected.isEnabled = !isLoading
         binding.btnRefreshSignals.isEnabled = !isLoading
     }

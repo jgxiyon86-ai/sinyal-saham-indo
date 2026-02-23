@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -39,7 +39,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Input sinyal, pantau realtime, dan kirim WA blast"
+                    android:text="Input sinyal dan blast sinyal terpilih"
                     android:textColor="#CFE3FF"
                     android:textSize="13sp" />
 
@@ -219,60 +219,6 @@
                 android:orientation="vertical"
                 android:padding="14dp">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="WA Blast"
-                    android:textStyle="bold"
-                    android:textColor="#0A316A"
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/etSignalIds"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:hint="Signal IDs, contoh: 12,13" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Filter Tier"
-                    android:textColor="#355A8F" />
-
-                <Spinner
-                    android:id="@+id/spBlastTier"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp" />
-
-                <Button
-                    android:id="@+id/btnSendBlast"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Send WA Blast"
-                    android:textAllCaps="false" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:strokeColor="#D9E8FF"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="14dp">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -315,7 +261,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvSignals"
                     android:layout_width="match_parent"
-                    android:layout_height="320dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:nestedScrollingEnabled="false" />
             </LinearLayout>
@@ -339,5 +285,5 @@
             android:layout_marginTop="16dp"
             android:visibility="gone" />
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>
 

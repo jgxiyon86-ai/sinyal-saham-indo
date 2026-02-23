@@ -48,6 +48,9 @@ data class SignalWaBlastResponse(
     val message: String? = null,
     val sent: Int? = null,
     val failed: Int? = null,
+    val batch_id: Int? = null,
+    val queued_targets: Int? = null,
+    val targets: Int? = null,
 )
 
 data class SignalItem(
