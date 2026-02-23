@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\GatewaySetting;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -9,16 +10,16 @@ class FonnteService
 {
     public function sendMessage(string $target, string $message, ?string $imageUrl = null): array
     {
-        $appApiKey = (string) config('services.alima_gateway.app_api_key');
-        $baseUrl = rtrim((string) config('services.alima_gateway.base_url'), '/');
-        $sessionId = (string) config('services.alima_gateway.session_id');
+        $appApiKey = GatewaySetting::appApiKey();
+        $baseUrl = GatewaySetting::baseUrl();
+        $sessionId = GatewaySetting::sessionId();
 
         if ($appApiKey === '') {
-            throw new RuntimeException('ALIMA_GATEWAY_APP_API_KEY belum diset di file .env');
+            throw new RuntimeException('Gateway API Key belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
         }
 
         if ($sessionId === '') {
-            throw new RuntimeException('ALIMA_GATEWAY_SESSION_ID belum diset di file .env');
+            throw new RuntimeException('Gateway Session ID belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
         }
 
         $response = Http::withHeaders([

@@ -6,6 +6,7 @@ use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Models\WaBlastLog;
 use App\Services\FonnteService;
+use App\Support\GatewaySetting;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use RuntimeException;
@@ -60,13 +61,13 @@ class SendAutomaticBirthdayWa extends Command
             return self::SUCCESS;
         }
 
-        if (! $isDryRun && (string) config('services.alima_gateway.app_api_key') === '') {
-            $this->error('ALIMA_GATEWAY_APP_API_KEY belum diisi di file .env');
+        if (! $isDryRun && GatewaySetting::appApiKey() === '') {
+            $this->error('Gateway API Key belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
             return self::FAILURE;
         }
 
-        if (! $isDryRun && (string) config('services.alima_gateway.session_id') === '') {
-            $this->error('ALIMA_GATEWAY_SESSION_ID belum diisi di file .env');
+        if (! $isDryRun && GatewaySetting::sessionId() === '') {
+            $this->error('Gateway Session ID belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
             return self::FAILURE;
         }
 

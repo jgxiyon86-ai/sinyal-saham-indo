@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ClientPageController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\GatewaySettingPageController;
 use App\Http\Controllers\Web\MessageTemplatePageController;
 use App\Http\Controllers\Web\PushPageController;
 use App\Http\Controllers\Web\SignalPageController;
@@ -64,6 +65,8 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::get('/login-theme', [LoginThemePageController::class, 'index'])->name('login-theme.page');
     Route::post('/login-theme/login', [LoginThemePageController::class, 'updateLogin'])->name('login-theme.login.update');
     Route::post('/login-theme/panel', [LoginThemePageController::class, 'updatePanel'])->name('login-theme.panel.update');
+    Route::get('/gateway-settings', [GatewaySettingPageController::class, 'index'])->name('gateway-settings.page');
+    Route::post('/gateway-settings', [GatewaySettingPageController::class, 'update'])->name('gateway-settings.update');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

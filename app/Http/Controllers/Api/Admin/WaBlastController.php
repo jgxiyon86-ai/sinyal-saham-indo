@@ -7,6 +7,7 @@ use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Models\WaBlastLog;
 use App\Services\FonnteService;
+use App\Support\GatewaySetting;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -163,15 +164,15 @@ class WaBlastController extends Controller
             'image_file' => ['nullable', 'image', 'max:4096'],
         ]);
 
-        if ((string) config('services.alima_gateway.app_api_key') === '') {
+        if (GatewaySetting::appApiKey() === '') {
             return response()->json([
-                'message' => 'ALIMA_GATEWAY_APP_API_KEY belum diisi.',
+                'message' => 'Gateway API Key belum diisi.',
             ], 422);
         }
 
-        if ((string) config('services.alima_gateway.session_id') === '') {
+        if (GatewaySetting::sessionId() === '') {
             return response()->json([
-                'message' => 'ALIMA_GATEWAY_SESSION_ID belum diisi.',
+                'message' => 'Gateway Session ID belum diisi.',
             ], 422);
         }
 

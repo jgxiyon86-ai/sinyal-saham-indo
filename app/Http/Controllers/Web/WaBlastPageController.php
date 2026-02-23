@@ -8,6 +8,7 @@ use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
 use App\Services\FonnteService;
+use App\Support\GatewaySetting;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -79,14 +80,14 @@ class WaBlastPageController extends Controller
     {
         [$data, $template, $date, $messages] = $this->buildMessages($request);
 
-        if ((string) config('services.alima_gateway.app_api_key') === '') {
+        if (GatewaySetting::appApiKey() === '') {
             return redirect()->route('wa-blast.page')
-                ->with('status', 'ALIMA_GATEWAY_APP_API_KEY belum diisi di file .env');
+                ->with('status', 'Gateway API Key belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
         }
 
-        if ((string) config('services.alima_gateway.session_id') === '') {
+        if (GatewaySetting::sessionId() === '') {
             return redirect()->route('wa-blast.page')
-                ->with('status', 'ALIMA_GATEWAY_SESSION_ID belum diisi di file .env');
+                ->with('status', 'Gateway Session ID belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
         }
 
         if ($messages->isEmpty()) {
@@ -150,14 +151,14 @@ class WaBlastPageController extends Controller
             'image_file' => ['nullable', 'image', 'max:4096'],
         ]);
 
-        if ((string) config('services.alima_gateway.app_api_key') === '') {
+        if (GatewaySetting::appApiKey() === '') {
             return redirect()->route('wa-blast.page')
-                ->with('status', 'ALIMA_GATEWAY_APP_API_KEY belum diisi di file .env');
+                ->with('status', 'Gateway API Key belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
         }
 
-        if ((string) config('services.alima_gateway.session_id') === '') {
+        if (GatewaySetting::sessionId() === '') {
             return redirect()->route('wa-blast.page')
-                ->with('status', 'ALIMA_GATEWAY_SESSION_ID belum diisi di file .env');
+                ->with('status', 'Gateway Session ID belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
         }
 
         $resolvedImageUrl = $data['image_url'] ?? null;

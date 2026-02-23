@@ -254,6 +254,7 @@
             <a href="{{ route('signal-wa-blast.page') }}" class="{{ request()->routeIs('signal-wa-blast.*') ? 'active' : '' }}">WA Blast Sinyal</a>
             <a href="{{ route('push.page') }}" class="{{ request()->routeIs('push.*') ? 'active' : '' }}">Push Broadcast</a>
             <a href="{{ route('login-theme.page') }}" class="{{ request()->routeIs('login-theme.*') ? 'active' : '' }}">Tema UI</a>
+            <a href="{{ route('gateway-settings.page') }}" class="{{ request()->routeIs('gateway-settings.*') ? 'active' : '' }}">Pengaturan Gateway</a>
         </nav>
     </aside>
 

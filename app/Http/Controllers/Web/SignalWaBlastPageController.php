@@ -8,6 +8,7 @@ use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
 use App\Services\FonnteService;
+use App\Support\GatewaySetting;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,14 +66,14 @@ class SignalWaBlastPageController extends Controller
     {
         [$payload, $targets] = $this->buildPayload($request);
 
-        if ((string) config('services.alima_gateway.app_api_key') === '') {
+        if (GatewaySetting::appApiKey() === '') {
             return redirect()->route('signal-wa-blast.page')
-                ->with('status', 'ALIMA_GATEWAY_APP_API_KEY belum diisi di file .env');
+                ->with('status', 'Gateway API Key belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
         }
 
-        if ((string) config('services.alima_gateway.session_id') === '') {
+        if (GatewaySetting::sessionId() === '') {
             return redirect()->route('signal-wa-blast.page')
-                ->with('status', 'ALIMA_GATEWAY_SESSION_ID belum diisi di file .env');
+                ->with('status', 'Gateway Session ID belum diisi. Isi dari menu Pengaturan Gateway atau file .env.');
         }
 
         if ($targets->isEmpty()) {

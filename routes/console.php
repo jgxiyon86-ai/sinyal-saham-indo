@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\GatewaySetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -9,7 +10,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('wa:auto-birthday')
-    ->dailyAt(env('WA_BIRTHDAY_AUTO_TIME', '08:00'))
+    ->dailyAt(GatewaySetting::birthdayAutoTime())
     ->withoutOverlapping()
     ->runInBackground();
 
