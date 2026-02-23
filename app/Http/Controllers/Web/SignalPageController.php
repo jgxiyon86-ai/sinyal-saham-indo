@@ -66,6 +66,7 @@ class SignalPageController extends Controller
                 'created_by' => $request->user()->id,
                 'published_at' => $data['published_at'] ?? now(),
                 'push_sent_at' => null,
+                'wa_blasted_at' => null,
             ]);
             $signal->tiers()->sync($tierIds);
 
@@ -96,6 +97,7 @@ class SignalPageController extends Controller
             $signal->update([
                 ...$data,
                 'push_sent_at' => null,
+                'wa_blasted_at' => null,
             ]);
             $signal->tiers()->sync($tierIds);
 

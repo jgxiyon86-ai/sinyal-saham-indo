@@ -223,6 +223,19 @@ class SignalWaBlastPageController extends Controller
             ]);
         }
 
+        $sentSignalIds = collect($results)
+            ->where('status', 'sent')
+            ->pluck('signal_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($sentSignalIds->isNotEmpty()) {
+            Signal::query()
+                ->whereIn('id', $sentSignalIds->all())
+                ->update(['wa_blasted_at' => now()]);
+        }
+
         return redirect()->route('signal-wa-blast.page')
             ->with('status', "WA Blast Sinyal selesai. Berhasil: {$success}, Gagal: {$failed}, Target: {$targetsCount}, Pesan terkirim: {$sentMessagesCount}.");
     }

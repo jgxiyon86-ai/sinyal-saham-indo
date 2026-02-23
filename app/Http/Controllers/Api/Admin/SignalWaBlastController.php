@@ -64,9 +64,9 @@ class SignalWaBlastController extends Controller
             foreach ($matched as $index => $signal) {
                 $type = strtoupper((string) $signal->signal_type);
                 $code = strtoupper((string) $signal->stock_code);
-                $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 2, '.', ',') : '-';
-                $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 2, '.', ',') : '-';
-                $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 2, '.', ',') : '-';
+                $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 0, '.', ',') : '-';
+                $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 0, '.', ',') : '-';
+                $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 0, '.', ',') : '-';
                 $line = "{$code} {$type} | Entry {$entry} | TP {$tp} | SL {$sl}";
                 $message = str_replace('{name}', $client->name, $opening)."\n\n- {$line}\n\n".str_replace('{name}', $client->name, $closing);
 
@@ -117,6 +117,19 @@ class SignalWaBlastController extends Controller
             'status' => $failed > 0 ? 'partial' : 'sent',
             'blasted_at' => now(),
         ]);
+
+        $sentSignalIds = collect($results)
+            ->where('status', 'sent')
+            ->pluck('signal_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($sentSignalIds->isNotEmpty()) {
+            Signal::query()
+                ->whereIn('id', $sentSignalIds->all())
+                ->update(['wa_blasted_at' => now()]);
+        }
 
         return response()->json([
             'message' => 'WA blast sinyal diproses.',

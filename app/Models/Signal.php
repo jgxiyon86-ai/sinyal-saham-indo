@@ -21,6 +21,7 @@ class Signal extends Model
         'published_at',
         'expires_at',
         'push_sent_at',
+        'wa_blasted_at',
     ];
 
     protected function casts(): array
@@ -32,6 +33,7 @@ class Signal extends Model
             'published_at' => 'datetime',
             'expires_at' => 'datetime',
             'push_sent_at' => 'datetime',
+            'wa_blasted_at' => 'datetime',
         ];
     }
 

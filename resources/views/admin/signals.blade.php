@@ -45,6 +45,8 @@
                     <td>
                         @if($signal->expires_at && $signal->expires_at->isPast())
                             <span class="badge badge-muted">Expired</span>
+                        @elseif($signal->wa_blasted_at)
+                            <span class="badge badge-success">Terkirim WA</span>
                         @elseif($signal->push_sent_at)
                             <span class="badge badge-success">Sudah Dipush</span>
                         @elseif($signal->published_at && $signal->published_at->isFuture())
