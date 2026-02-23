@@ -5,12 +5,20 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.alima.adminsinyal.data.model.SignalItem
 import com.alima.adminsinyal.databinding.ItemSignalBinding
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class SignalAdapter(
     private val onBlastClick: (SignalItem) -> Unit,
     private val onDeleteClick: (SignalItem) -> Unit,
     private val onSelectionChanged: (Int) -> Unit,
 ) : RecyclerView.Adapter<SignalAdapter.SignalViewHolder>() {
+    private val wibZone: ZoneId = ZoneId.of("Asia/Jakarta")
+    private val wibFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.US)
 
     private val items = mutableListOf<SignalItem>()
     private val selectedIds = linkedSetOf<Int>()
@@ -47,8 +55,8 @@ class SignalAdapter(
         fun bind(item: SignalItem) {
             binding.tvTitle.text = "${item.title ?: "-"} (#${item.id})"
             binding.tvMeta.text = "${item.stock_code ?: "-"} | ${item.signal_type ?: "-"}"
-            binding.tvPublish.text = "Publish: ${item.published_at ?: "-"}"
-            binding.tvExpired.text = "Expired: ${item.expires_at ?: "-"}"
+            binding.tvPublish.text = "Publish: ${toWibText(item.published_at)}"
+            binding.tvExpired.text = "Expired: ${toWibText(item.expires_at)}"
             binding.tvNote.text = item.note ?: "-"
             binding.cbSelect.setOnCheckedChangeListener(null)
             binding.cbSelect.isChecked = selectedIds.contains(item.id)
@@ -62,6 +70,16 @@ class SignalAdapter(
             }
             binding.btnBlastThis.setOnClickListener { onBlastClick(item) }
             binding.btnDeleteThis.setOnClickListener { onDeleteClick(item) }
+        }
+
+        private fun toWibText(raw: String?): String {
+            if (raw.isNullOrBlank()) return "-"
+
+            val instant = runCatching { Instant.parse(raw) }.getOrNull()
+                ?: runCatching { OffsetDateTime.parse(raw).toInstant() }.getOrNull()
+                ?: return raw
+
+            return "${wibFormatter.format(instant.atZone(wibZone))} WIB"
         }
     }
 }

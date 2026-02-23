@@ -17,35 +17,35 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
-    @POST("auth/login")
+    @POST("/api/auth/login")
     suspend fun login(
         @Body body: LoginRequest,
     ): Response<LoginResponse>
 
-    @POST("admin/signals")
+    @POST("/api/admin/signals")
     suspend fun createSignal(
         @Header("Authorization") bearerToken: String,
         @Body body: AdminCreateSignalRequest,
     ): Response<AdminCreateSignalResponse>
 
-    @POST("admin/signals/wa-blast")
+    @POST("/api/admin/signals/wa-blast")
     suspend fun sendWaBlast(
         @Header("Authorization") bearerToken: String,
         @Body body: SignalWaBlastRequest,
     ): Response<SignalWaBlastResponse>
 
-    @GET("admin/signals")
+    @GET("/api/admin/signals")
     suspend fun getSignals(
         @Header("Authorization") bearerToken: String,
     ): Response<SignalListResponse>
 
-    @DELETE("admin/signals/{id}")
+    @DELETE("/api/admin/signals/{id}")
     suspend fun deleteSignal(
         @Header("Authorization") bearerToken: String,
         @Path("id") id: Int,
     ): Response<Map<String, String>>
 
-    @GET("admin/tiers")
+    @GET("/api/admin/tiers")
     suspend fun getTiers(
         @Header("Authorization") bearerToken: String,
     ): Response<TierListResponse>

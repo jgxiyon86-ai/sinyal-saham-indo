@@ -288,7 +288,7 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun parseError(body: String?): String {
         if (body.isNullOrBlank()) return ""
-        return runCatching {
+        val parsed = runCatching {
             val json = JSONObject(body)
             val msg = json.optString("message")
             if (msg.isNotBlank()) return@runCatching msg
@@ -304,6 +304,11 @@ class DashboardActivity : AppCompatActivity() {
             }
             ""
         }.getOrDefault("")
+
+        if (parsed.isNotBlank()) return parsed
+
+        // Fallback supaya error HTML/text dari proxy tetap kelihatan di UI.
+        return body.replace('\n', ' ').replace('\r', ' ').trim().take(180)
     }
 
     private fun updateSignalCountLabel(total: Int) {
