@@ -3,6 +3,42 @@
 @section('title', 'WA Blast Sinyal')
 
 @section('content')
+    <style>
+        .wa-loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 23, 41, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .wa-loading-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 18px;
+            min-width: 260px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            color: #123;
+        }
+        .wa-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1b74e4;
+            display: inline-block;
+            margin-right: 4px;
+            animation: waPulse 1s infinite ease-in-out;
+        }
+        .wa-dot:nth-child(2) { animation-delay: 0.15s; }
+        .wa-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes waPulse {
+            0%, 100% { opacity: 0.25; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-2px); }
+        }
+    </style>
+
     <h2 style="margin:0 0 4px;">WA Blast Sinyal</h2>
     <p style="margin:0 0 14px;color:#4d6b8f;">Input beberapa sinyal dulu, lalu kirim blast WA ke klient sesuai tier.</p>
 
@@ -19,7 +55,7 @@
 
     <div class="panel">
         <h3 style="margin:0 0 10px;">Pilih Sinyal + Filter Target</h3>
-        <form method="POST" action="{{ route('signal-wa-blast.preview') }}">
+        <form id="preview-form" method="POST" action="{{ route('signal-wa-blast.preview') }}">
             @csrf
             <div class="field-grid">
                 <div>
@@ -66,7 +102,7 @@
             </div>
 
             <div style="margin-top:10px;">
-                <button class="btn" type="submit">Preview WA Blast Sinyal</button>
+                <button id="btn-preview-submit" class="btn" type="submit">Preview WA Blast Sinyal</button>
             </div>
         </form>
     </div>
@@ -76,7 +112,7 @@
             <h3 style="margin:0 0 6px;">Preview Target Blast</h3>
             <div style="font-size:13px;color:#4d6b8f;margin-bottom:10px;">Total target sesuai filter: <b>{{ $preview->count() }}</b></div>
 
-            <form method="POST" action="{{ route('signal-wa-blast.send') }}" style="margin-bottom:10px;">
+            <form id="send-form" method="POST" action="{{ route('signal-wa-blast.send') }}" style="margin-bottom:10px;">
                 @csrf
                 @foreach($selectedSignalIds as $signalId)
                     <input type="hidden" name="signal_ids[]" value="{{ $signalId }}">
@@ -87,7 +123,7 @@
                 <input type="hidden" name="opening_text" value="{{ $settings['opening_text'] }}">
                 <input type="hidden" name="closing_text" value="{{ $settings['closing_text'] }}">
                 <input type="hidden" name="image_url" value="{{ $settings['image_url'] }}">
-                <button class="btn" type="submit" onclick="return confirm('Kirim WA Blast Sinyal sekarang?')">Kirim WA Blast Sinyal</button>
+                <button id="btn-send-submit" class="btn" type="submit" onclick="return confirm('Kirim WA Blast Sinyal sekarang?')">Kirim WA Blast Sinyal</button>
             </form>
 
             <div class="table-wrap">
@@ -141,6 +177,14 @@
 @endsection
 
 @push('scripts')
+<div id="wa-loading-overlay" class="wa-loading-overlay">
+    <div class="wa-loading-box">
+        <div style="display:flex; align-items:center; margin-bottom:8px;">
+            <span class="wa-dot"></span><span class="wa-dot"></span><span class="wa-dot"></span>
+        </div>
+        <div id="wa-loading-text">Memproses blast, mohon tunggu...</div>
+    </div>
+</div>
 <script>
 (function () {
     const input = document.getElementById('image-url-signal-blast');
@@ -192,6 +236,41 @@
             }
         }
     });
+})();
+
+(function () {
+    const overlay = document.getElementById('wa-loading-overlay');
+    const loadingText = document.getElementById('wa-loading-text');
+    const previewForm = document.getElementById('preview-form');
+    const sendForm = document.getElementById('send-form');
+    const previewButton = document.getElementById('btn-preview-submit');
+    const sendButton = document.getElementById('btn-send-submit');
+
+    function showLoading(text) {
+        if (!overlay) return;
+        if (loadingText && text) loadingText.textContent = text;
+        overlay.style.display = 'flex';
+    }
+
+    if (previewForm) {
+        previewForm.addEventListener('submit', function () {
+            if (previewButton) {
+                previewButton.disabled = true;
+                previewButton.textContent = 'Memproses...';
+            }
+            showLoading('Menyusun preview target blast...');
+        });
+    }
+
+    if (sendForm) {
+        sendForm.addEventListener('submit', function () {
+            if (sendButton) {
+                sendButton.disabled = true;
+                sendButton.textContent = 'Mengirim...';
+            }
+            showLoading('Sedang mengirim WA Blast Sinyal...');
+        });
+    }
 })();
 </script>
 @endpush
