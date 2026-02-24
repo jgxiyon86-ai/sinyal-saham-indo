@@ -47,7 +47,8 @@ class SignalWaBlastController extends Controller
             ->with('tier:id,name')
             ->where('role', 'client')
             ->where('is_active', true)
-            ->whereNotNull('whatsapp_number');
+            ->whereNotNull('whatsapp_number')
+            ->where('whatsapp_number', 'regexp', '^(\\+62|62|0)?8[0-9]{7,13}$');
 
         if (! empty($data['tier_id'])) {
             $clientsQuery->where('tier_id', $data['tier_id']);

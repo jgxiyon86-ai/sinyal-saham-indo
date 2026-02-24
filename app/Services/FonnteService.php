@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\WaNumber;
 use App\Support\GatewaySetting;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -10,6 +11,11 @@ class FonnteService
 {
     public function sendMessage(string $target, string $message, ?string $imageUrl = null): array
     {
+        $normalizedTarget = WaNumber::normalize($target);
+        if ($normalizedTarget === null) {
+            throw new RuntimeException('Nomor WA tidak valid. Gunakan format 08xxxx atau 628xxxx.');
+        }
+
         $appApiKey = GatewaySetting::appApiKey();
         $baseUrl = GatewaySetting::baseUrl();
         $sessionId = GatewaySetting::sessionId();
@@ -24,7 +30,7 @@ class FonnteService
 
         $payload = [
             'sessionId' => $sessionId,
-            'to' => $target,
+            'to' => $normalizedTarget,
             'message' => $message,
             'imageUrl' => $imageUrl ?: null,
         ];

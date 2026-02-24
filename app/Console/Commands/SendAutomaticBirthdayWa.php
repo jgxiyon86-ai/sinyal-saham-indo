@@ -52,6 +52,7 @@ class SendAutomaticBirthdayWa extends Command
             ->where('role', 'client')
             ->where('is_active', true)
             ->whereNotNull('whatsapp_number')
+            ->where('whatsapp_number', 'regexp', '^(\\+62|62|0)?8[0-9]{7,13}$')
             ->whereMonth('birth_date', $date->month)
             ->whereDay('birth_date', $date->day)
             ->get();

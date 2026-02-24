@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Tier;
 use App\Models\User;
+use App\Support\WaNumber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -42,12 +43,13 @@ class ClientController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
             'address' => ['nullable', 'string'],
-            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'max:30', 'regex:'.WaNumber::validationRegex()],
             'birth_date' => ['nullable', 'date'],
             'religion' => ['nullable', Rule::in($this->religions)],
             'capital_amount' => ['required', 'numeric', 'min:0'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+        $data['whatsapp_number'] = WaNumber::normalize($data['whatsapp_number'] ?? null);
 
         $tier = $this->findTierByCapital((float) $data['capital_amount']);
 
@@ -82,12 +84,13 @@ class ClientController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($client->id)],
             'password' => ['nullable', 'string', 'min:8'],
             'address' => ['nullable', 'string'],
-            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'max:30', 'regex:'.WaNumber::validationRegex()],
             'birth_date' => ['nullable', 'date'],
             'religion' => ['nullable', Rule::in($this->religions)],
             'capital_amount' => ['required', 'numeric', 'min:0'],
             'is_active' => ['required', 'boolean'],
         ]);
+        $data['whatsapp_number'] = WaNumber::normalize($data['whatsapp_number'] ?? null);
 
         if (empty($data['password'])) {
             unset($data['password']);

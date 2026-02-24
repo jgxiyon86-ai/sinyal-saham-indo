@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\ClientCredentialsMail;
 use App\Models\Tier;
 use App\Models\User;
+use App\Support\WaNumber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -151,16 +152,20 @@ class ClientPageController extends Controller
 
     private function validatedData(Request $request, ?int $ignoreUserId = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($ignoreUserId)],
             'password' => [$ignoreUserId ? 'nullable' : 'required', 'string', 'min:8'],
             'address' => ['nullable', 'string'],
-            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'max:30', 'regex:'.WaNumber::validationRegex()],
             'birth_date' => ['nullable', 'date'],
             'religion' => ['nullable', Rule::in($this->religions)],
             'capital_amount' => ['required', 'numeric', 'min:0'],
         ]);
+
+        $data['whatsapp_number'] = WaNumber::normalize($data['whatsapp_number'] ?? null);
+
+        return $data;
     }
 
     private function findTierByCapital(float $capital): ?Tier

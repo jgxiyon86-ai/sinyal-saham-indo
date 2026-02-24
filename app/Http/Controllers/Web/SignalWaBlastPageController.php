@@ -304,7 +304,8 @@ class SignalWaBlastPageController extends Controller
         $clientsQuery = User::query()
             ->where('role', 'client')
             ->where('is_active', true)
-            ->whereNotNull('whatsapp_number');
+            ->whereNotNull('whatsapp_number')
+            ->where('whatsapp_number', 'regexp', '^(\\+62|62|0)?8[0-9]{7,13}$');
 
         if (! empty($payload['tier_id'])) {
             $clientsQuery->where('tier_id', $payload['tier_id']);

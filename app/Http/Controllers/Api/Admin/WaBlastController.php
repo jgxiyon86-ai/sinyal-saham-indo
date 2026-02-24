@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\WaBlastLog;
 use App\Services\FonnteService;
 use App\Support\GatewaySetting;
+use App\Support\WaNumber;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -166,11 +167,12 @@ class WaBlastController extends Controller
     public function manualSend(Request $request, FonnteService $fonnteService): JsonResponse
     {
         $data = $request->validate([
-            'whatsapp_number' => ['required', 'string', 'max:30'],
+            'whatsapp_number' => ['required', 'string', 'max:30', 'regex:'.WaNumber::validationRegex()],
             'message' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url'],
             'image_file' => ['nullable', 'image', 'max:4096'],
         ]);
+        $data['whatsapp_number'] = WaNumber::normalize($data['whatsapp_number']) ?? '';
 
         if (GatewaySetting::appApiKey() === '') {
             return response()->json([
@@ -260,7 +262,8 @@ class WaBlastController extends Controller
             ->with('tier:id,name')
             ->where('role', 'client')
             ->where('is_active', true)
-            ->whereNotNull('whatsapp_number');
+            ->whereNotNull('whatsapp_number')
+            ->where('whatsapp_number', 'regexp', '^(\\+62|62|0)?8[0-9]{7,13}$');
     }
 
     private function targetColumns(): array
