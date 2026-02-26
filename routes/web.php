@@ -58,8 +58,10 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::post('/wa-blast/manual-send', [WaBlastPageController::class, 'manualSend'])->name('wa-blast.manual-send');
     Route::post('/wa-blast/upload-image', [WaBlastPageController::class, 'uploadImage'])->name('wa-blast.upload-image');
     Route::get('/wa-blast-sinyal', [SignalWaBlastPageController::class, 'index'])->name('signal-wa-blast.page');
-    Route::match(['GET', 'POST'], '/wa-blast-sinyal/preview', [SignalWaBlastPageController::class, 'preview'])->name('signal-wa-blast.preview');
-    Route::match(['GET', 'POST'], '/wa-blast-sinyal/send', [SignalWaBlastPageController::class, 'send'])->name('signal-wa-blast.send');
+    Route::get('/wa-blast-sinyal/preview', fn () => redirect()->route('signal-wa-blast.page'));
+    Route::get('/wa-blast-sinyal/send', fn () => redirect()->route('signal-wa-blast.page'));
+    Route::match(['GET', 'POST'], '/wa-blast-sinyal/preview-proc', [SignalWaBlastPageController::class, 'preview'])->name('signal-wa-blast.preview');
+    Route::match(['GET', 'POST'], '/wa-blast-sinyal/send-proc', [SignalWaBlastPageController::class, 'send'])->name('signal-wa-blast.send');
     Route::get('/push-broadcast', [PushPageController::class, 'index'])->name('push.page');
     Route::post('/push-broadcast', [PushPageController::class, 'send'])->name('push.send');
     Route::get('/login-theme', [LoginThemePageController::class, 'index'])->name('login-theme.page');
