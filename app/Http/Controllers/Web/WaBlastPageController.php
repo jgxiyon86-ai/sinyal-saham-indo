@@ -168,6 +168,7 @@ class WaBlastPageController extends Controller
         if ($request->hasFile('image_file')) {
             $resolvedImageUrl = $this->storeImageAndGetUrl($request->file('image_file'));
         }
+        $resolvedImageUrl = $this->normalizeOutgoingImageUrl($resolvedImageUrl);
 
         if (blank($data['message'] ?? null) && blank($resolvedImageUrl)) {
             return redirect()->route('wa-blast.page')
@@ -339,7 +340,27 @@ class WaBlastPageController extends Controller
     private function storeImageAndGetUrl(UploadedFile $file): string
     {
         $path = $file->store('wa-manual-images', 'public');
+        $url = Storage::disk('public')->url($path);
 
-        return Storage::disk('public')->url($path);
+        return $this->normalizeOutgoingImageUrl($url) ?? $url;
+    }
+
+    private function normalizeOutgoingImageUrl(?string $url): ?string
+    {
+        if (blank($url)) {
+            return null;
+        }
+
+        $trimmed = trim($url);
+        if (preg_match('/^https?:\/\//i', $trimmed) === 1) {
+            return $trimmed;
+        }
+
+        $base = rtrim((string) config('app.url'), '/');
+        if ($base === '') {
+            return $trimmed;
+        }
+
+        return $base.'/'.ltrim($trimmed, '/');
     }
 }
