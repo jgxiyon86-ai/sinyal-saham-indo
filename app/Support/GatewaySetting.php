@@ -36,6 +36,26 @@ class GatewaySetting
         return trim((string) config('services.alima_gateway.session_id', ''));
     }
 
+    public static function panelUrl(): string
+    {
+        $value = AppSetting::getValue('gateway_panel_url');
+        if (is_string($value) && trim($value) !== '') {
+            return rtrim(trim($value), '/');
+        }
+
+        return rtrim((string) config('services.alima_gateway.panel_url', ''), '/');
+    }
+
+    public static function appId(): string
+    {
+        $value = AppSetting::getValue('gateway_app_id');
+        if (is_string($value) && trim($value) !== '') {
+            return trim($value);
+        }
+
+        return trim((string) config('services.alima_gateway.app_id', ''));
+    }
+
     public static function birthdayAutoTime(): string
     {
         $value = AppSetting::getValue('wa_birthday_auto_time');
@@ -46,4 +66,3 @@ class GatewaySetting
         return trim((string) env('WA_BIRTHDAY_AUTO_TIME', '08:00'));
     }
 }
-

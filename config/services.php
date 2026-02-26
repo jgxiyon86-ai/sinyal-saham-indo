@@ -43,6 +43,8 @@ return [
 
     'alima_gateway' => [
         'base_url' => env('ALIMA_GATEWAY_BASE_URL', 'http://127.0.0.1:3210'),
+        'panel_url' => env('ALIMA_GATEWAY_PANEL_URL', 'https://panelhub.cuanholic.com'),
+        'app_id' => env('ALIMA_GATEWAY_APP_ID', 'sinyal-saham-indo'),
         'app_api_key' => env('ALIMA_GATEWAY_APP_API_KEY'),
         'session_id' => env('ALIMA_GATEWAY_SESSION_ID'),
     ],

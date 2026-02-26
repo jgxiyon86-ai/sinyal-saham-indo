@@ -69,8 +69,10 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::post('/login-theme/panel', [LoginThemePageController::class, 'updatePanel'])->name('login-theme.panel.update');
     Route::get('/wa-config', [GatewaySettingPageController::class, 'index'])->name('gateway-settings.page');
     Route::post('/wa-config', [GatewaySettingPageController::class, 'update'])->name('gateway-settings.update');
+    Route::post('/wa-config/test', [GatewaySettingPageController::class, 'test'])->name('gateway-settings.test');
     Route::get('/gateway-settings', [GatewaySettingPageController::class, 'index']);
     Route::post('/gateway-settings', [GatewaySettingPageController::class, 'update']);
+    Route::post('/gateway-settings/test', [GatewaySettingPageController::class, 'test']);
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
