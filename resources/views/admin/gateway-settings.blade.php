@@ -68,7 +68,14 @@
             <span class="badge badge-info">Base URL: {{ $settings['gateway_base_url'] ?: '-' }}</span>
             <span class="badge badge-info">Panel URL: {{ $settings['gateway_panel_url'] ?? '-' }}</span>
             <span class="badge badge-info">App ID: {{ $settings['gateway_app_id'] ?? '-' }}</span>
+            @php($sessionState = strtolower((string) ($session_status['state'] ?? 'skip')))
+            <span class="badge {{ $sessionState === 'connected' ? 'badge-success' : ($sessionState === 'skip' ? 'badge-info' : 'badge-warn') }}">
+                Session Status: {{ $session_status['label'] ?? 'N/A' }}
+            </span>
         </div>
+        @if (!empty($session_status['detail']))
+            <div style="margin-top:8px; color: var(--muted); font-size: 13px;">{{ $session_status['detail'] }}</div>
+        @endif
 
         @if (session('gateway_test'))
             @php($t = session('gateway_test'))

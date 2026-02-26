@@ -14,6 +14,12 @@ class GatewaySettingPageController extends Controller
 {
     public function index(): View
     {
+        $sessionStatus = $this->fetchSessionStatus(
+            GatewaySetting::baseUrl(),
+            GatewaySetting::appApiKey(),
+            GatewaySetting::sessionId()
+        );
+
         return view('admin.gateway-settings', [
             'settings' => [
                 'gateway_base_url' => GatewaySetting::baseUrl(),
@@ -23,6 +29,7 @@ class GatewaySettingPageController extends Controller
                 'gateway_session_id' => GatewaySetting::sessionId(),
                 'wa_birthday_auto_time' => GatewaySetting::birthdayAutoTime(),
             ],
+            'session_status' => $sessionStatus,
         ]);
     }
 
@@ -73,21 +80,16 @@ class GatewaySettingPageController extends Controller
         }
 
         if ($appApiKey !== '' && $sessionId !== '') {
-            try {
-                $session = Http::timeout(12)
-                    ->acceptJson()
-                    ->withHeaders(['x-api-key' => $appApiKey])
-                    ->get(rtrim($baseUrl, '/').'/sessions/'.urlencode($sessionId).'/status');
-
-                if ($session->successful()) {
-                    $result['hub_session'] = 'ok';
-                } else {
-                    $result['hub_session'] = 'fail';
-                    $result['detail'][] = 'Hub session status gagal: HTTP '.$session->status();
-                }
-            } catch (\Throwable $e) {
+            $sessionCheck = $this->fetchSessionStatus($baseUrl, $appApiKey, $sessionId);
+            if (($sessionCheck['state'] ?? '') === 'connected') {
+                $result['hub_session'] = 'ok';
+            } elseif (($sessionCheck['state'] ?? '') === 'skip') {
+                $result['hub_session'] = 'skip';
+            } else {
                 $result['hub_session'] = 'fail';
-                $result['detail'][] = 'Hub session status error: '.$e->getMessage();
+            }
+            if (!empty($sessionCheck['detail'])) {
+                $result['detail'][] = $sessionCheck['detail'];
             }
         } else {
             $result['detail'][] = 'Session check dilewati: API key/session belum diisi.';
@@ -118,5 +120,44 @@ class GatewaySettingPageController extends Controller
             ->route('gateway-settings.page')
             ->with('status', $okAll ? 'Koneksi gateway berhasil diuji.' : 'Tes koneksi gateway ada yang gagal.')
             ->with('gateway_test', $result);
+    }
+
+    private function fetchSessionStatus(string $baseUrl, string $appApiKey, string $sessionId): array
+    {
+        if ($appApiKey === '' || $sessionId === '') {
+            return [
+                'state' => 'skip',
+                'label' => 'Belum diisi',
+                'detail' => 'API key / Session ID belum diisi.',
+            ];
+        }
+
+        try {
+            $response = Http::timeout(10)
+                ->acceptJson()
+                ->withHeaders(['x-api-key' => $appApiKey])
+                ->get(rtrim($baseUrl, '/').'/sessions/'.urlencode($sessionId).'/status');
+
+            if (! $response->successful()) {
+                return [
+                    'state' => 'error',
+                    'label' => 'Error',
+                    'detail' => 'Hub session status gagal: HTTP '.$response->status(),
+                ];
+            }
+
+            $status = (string) strtolower((string) $response->json('session.status', 'unknown'));
+            return [
+                'state' => $status,
+                'label' => strtoupper($status),
+                'detail' => 'Session: '.(string) $response->json('session.sessionId', $sessionId),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'state' => 'error',
+                'label' => 'Error',
+                'detail' => 'Hub session status error: '.$e->getMessage(),
+            ];
+        }
     }
 }
