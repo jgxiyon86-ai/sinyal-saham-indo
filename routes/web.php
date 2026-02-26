@@ -62,6 +62,8 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::get('/wa-blast-sinyal/send', fn () => redirect()->route('signal-wa-blast.page'));
     Route::any('/wa-blast-sinyal/preview-proc', [SignalWaBlastPageController::class, 'preview'])->name('signal-wa-blast.preview');
     Route::any('/wa-blast-sinyal/send-proc', [SignalWaBlastPageController::class, 'send'])->name('signal-wa-blast.send');
+    Route::post('/wa-blast-sinyal/{batch}/resend-failed', [SignalWaBlastPageController::class, 'resendFailed'])->name('signal-wa-blast.resend-failed');
+    Route::post('/wa-blast-sinyal/targets/{target}/resend', [SignalWaBlastPageController::class, 'resendTarget'])->name('signal-wa-blast.resend-target');
     Route::get('/push-broadcast', [PushPageController::class, 'index'])->name('push.page');
     Route::post('/push-broadcast', [PushPageController::class, 'send'])->name('push.send');
     Route::get('/login-theme', [LoginThemePageController::class, 'index'])->name('login-theme.page');

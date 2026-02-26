@@ -172,7 +172,15 @@
                         <td>{{ $batch->pending_count }}</td>
                         <td>{{ $batch->sent_count }}</td>
                         <td>{{ $batch->failed_count }}</td>
-                        <td><a class="btn btn-muted" href="{{ route('signal-wa-blast.page', ['batch_id' => $batch->id]) }}" style="text-decoration:none;">Lihat Target</a></td>
+                        <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <a class="btn btn-muted" href="{{ route('signal-wa-blast.page', ['batch_id' => $batch->id]) }}" style="text-decoration:none;">Lihat Target</a>
+                            @if((int) $batch->failed_count > 0)
+                                <form method="POST" action="{{ route('signal-wa-blast.resend-failed', $batch) }}" onsubmit="return confirm('Resend semua target FAILED di batch ini?')">
+                                    @csrf
+                                    <button type="submit" class="btn">Resend Failed</button>
+                                </form>
+                            @endif
+                        </td>
                     </tr>
                 @empty
                     <tr><td colspan="8">Belum ada queue blast.</td></tr>
@@ -184,7 +192,7 @@
         <h3 style="margin:0 0 6px;">Status per Target {{ $activeBatch ? "(Batch #{$activeBatch->id})" : '' }}</h3>
         <div class="table-wrap">
             <table>
-                <thead><tr><th>ID</th><th>Nama</th><th>Nomor</th><th>Sinyal</th><th>Status</th><th>Percobaan</th><th>Error/Response</th><th>Waktu</th></tr></thead>
+                <thead><tr><th>ID</th><th>Nama</th><th>Nomor</th><th>Sinyal</th><th>Status</th><th>Percobaan</th><th>Error/Response</th><th>Waktu</th><th>Aksi</th></tr></thead>
                 <tbody>
                 @forelse($queueTargets as $target)
                     <tr>
@@ -204,9 +212,19 @@
                             @endif
                         </td>
                         <td>{{ $target->sent_at?->format('Y-m-d H:i:s') ?? '-' }}</td>
+                        <td>
+                            @if((string) $target->status === 'failed')
+                                <form method="POST" action="{{ route('signal-wa-blast.resend-target', $target) }}" onsubmit="return confirm('Resend target ini?')">
+                                    @csrf
+                                    <button type="submit" class="btn btn-muted">Resend</button>
+                                </form>
+                            @else
+                                -
+                            @endif
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8">Belum ada data target.</td></tr>
+                    <tr><td colspan="9">Belum ada data target.</td></tr>
                 @endforelse
                 </tbody>
             </table>

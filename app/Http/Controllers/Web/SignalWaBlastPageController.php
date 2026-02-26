@@ -260,6 +260,86 @@ class SignalWaBlastPageController extends Controller
             ->with('status', "WA Blast masuk antrian. Batch #{$batch->id}, total job: {$batch->total_targets}. Proses bertahap sesuai limit tier.");
     }
 
+    public function resendFailed(SignalWaBlastBatch $batch): RedirectResponse
+    {
+        $failedCount = SignalWaBlastTarget::query()
+            ->where('batch_id', $batch->id)
+            ->where('status', 'failed')
+            ->count();
+
+        if ($failedCount <= 0) {
+            return redirect()
+                ->route('signal-wa-blast.page', ['batch_id' => $batch->id])
+                ->with('status', 'Tidak ada target failed untuk di-resend.');
+        }
+
+        DB::transaction(function () use ($batch): void {
+            SignalWaBlastTarget::query()
+                ->where('batch_id', $batch->id)
+                ->where('status', 'failed')
+                ->update([
+                    'status' => 'pending',
+                    'last_error' => null,
+                    'response_payload' => null,
+                    'sent_at' => null,
+                    'updated_at' => now(),
+                ]);
+
+            $this->refreshBatchStats($batch);
+        });
+
+        try {
+            \Artisan::call('signals:process-wa-queue', ['--batch_id' => $batch->id]);
+        } catch (Throwable $e) {
+            Log::warning('Signal WA resend failed batch immediate processing failed', [
+                'batch_id' => $batch->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()
+            ->route('signal-wa-blast.page', ['batch_id' => $batch->id])
+            ->with('status', "Resend failed dijalankan untuk batch #{$batch->id} ({$failedCount} target).");
+    }
+
+    public function resendTarget(SignalWaBlastTarget $target): RedirectResponse
+    {
+        if ((string) $target->status !== 'failed') {
+            return redirect()
+                ->route('signal-wa-blast.page', ['batch_id' => $target->batch_id])
+                ->with('status', 'Hanya target FAILED yang bisa di-resend.');
+        }
+
+        DB::transaction(function () use ($target): void {
+            $target->forceFill([
+                'status' => 'pending',
+                'last_error' => null,
+                'response_payload' => null,
+                'sent_at' => null,
+                'updated_at' => now(),
+            ])->save();
+
+            $batch = SignalWaBlastBatch::query()->find($target->batch_id);
+            if ($batch) {
+                $this->refreshBatchStats($batch);
+            }
+        });
+
+        try {
+            \Artisan::call('signals:process-wa-queue', ['--batch_id' => $target->batch_id]);
+        } catch (Throwable $e) {
+            Log::warning('Signal WA resend target immediate processing failed', [
+                'target_id' => $target->id,
+                'batch_id' => $target->batch_id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()
+            ->route('signal-wa-blast.page', ['batch_id' => $target->batch_id])
+            ->with('status', "Target #{$target->id} dimasukkan ulang ke antrian.");
+    }
+
     private function availableSignals(): Collection
     {
         $now = now();
@@ -432,5 +512,21 @@ class SignalWaBlastPageController extends Controller
             ->paginate(40, ['*'], 'targets_page');
 
         return [$batchRows, $activeBatch, $targetRows];
+    }
+
+    private function refreshBatchStats(SignalWaBlastBatch $batch): void
+    {
+        $base = SignalWaBlastTarget::query()->where('batch_id', $batch->id);
+        $pendingCount = (clone $base)->where('status', 'pending')->count();
+        $sentCount = (clone $base)->where('status', 'sent')->count();
+        $failedCount = (clone $base)->where('status', 'failed')->count();
+
+        $batch->forceFill([
+            'pending_count' => $pendingCount,
+            'sent_count' => $sentCount,
+            'failed_count' => $failedCount,
+            'status' => $pendingCount > 0 ? 'queued' : ($failedCount > 0 ? 'partial' : 'completed'),
+            'finished_at' => $pendingCount > 0 ? null : now(),
+        ])->save();
     }
 }
