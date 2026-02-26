@@ -60,8 +60,12 @@ class SignalWaBlastPageController extends Controller
         ]);
     }
 
-    public function preview(Request $request): View
+    public function preview(Request $request): View|RedirectResponse
     {
+        if ($request->isMethod('get')) {
+            return redirect()->route('signal-wa-blast.page');
+        }
+
         try {
             [$payload, $targets] = $this->buildPayload($request);
         } catch (Throwable $e) {
@@ -128,6 +132,10 @@ class SignalWaBlastPageController extends Controller
 
     public function send(Request $request): RedirectResponse
     {
+        if ($request->isMethod('get')) {
+            return redirect()->route('signal-wa-blast.page');
+        }
+
         try {
             [$payload, $targets] = $this->buildPayload($request);
         } catch (Throwable $e) {
