@@ -16,12 +16,12 @@
             @csrf
             <div class="field-grid">
                 <div><label>Nomor HP Tujuan</label><input name="whatsapp_number" value="{{ old('whatsapp_number') }}" placeholder="628xxxx" required></div>
-                <div>
+                <div style="grid-column:1/-1;">
                     <label>Image URL (opsional)</label>
-                    <input id="image-url-manual" name="image_url" type="url" value="{{ old('image_url') }}" placeholder="{{ rtrim(config('app.url'), '/') }}/storage/wa-manual-images/file.jpg">
+                    <input id="image-url-manual" name="image_url" type="url" value="{{ old('image_url') }}" placeholder="{{ rtrim(config('app.url'), '/') }}/storage/wa-manual-images/file.jpg" style="font-family:monospace;">
                     <div style="font-size:12px;color:#4d6b8f;margin-top:4px;">Bisa Ctrl+V screenshot langsung di kolom ini. Rekomendasi: pakai upload agar URL otomatis valid.</div>
                 </div>
-                <div style="grid-column:1/-1;"><label>Upload Gambar (opsional, akan override URL)</label><input name="image_file" type="file" accept="image/*"></div>
+                <div style="grid-column:1/-1;"><label>Upload Gambar (opsional, akan override URL)</label><input id="manual-image-file" name="image_file" type="file" accept="image/*"></div>
                 <div style="grid-column:1/-1;"><label>Pesan (opsional jika ada gambar)</label><textarea name="message">{{ old('message') }}</textarea></div>
             </div>
             <div style="margin-top:10px;"><button class="btn" type="submit" onclick="return confirm('Kirim manual sekarang?')">Kirim Manual</button></div>
@@ -146,6 +146,7 @@
 <script>
 (function () {
     const input = document.getElementById('image-url-manual');
+    const fileInput = document.getElementById('manual-image-file');
     if (!input) return;
 
     async function uploadClipboardImage(file) {
@@ -194,6 +195,14 @@
             }
         }
     });
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files && fileInput.files.length > 0) {
+                input.value = '';
+            }
+        });
+    }
 })();
 </script>
 @endpush

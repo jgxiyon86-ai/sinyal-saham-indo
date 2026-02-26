@@ -169,6 +169,10 @@ class WaBlastPageController extends Controller
             $resolvedImageUrl = $this->storeImageAndGetUrl($request->file('image_file'));
         }
         $resolvedImageUrl = $this->normalizeOutgoingImageUrl($resolvedImageUrl);
+        if (!blank($resolvedImageUrl) && str_ends_with(strtolower((string) parse_url($resolvedImageUrl, PHP_URL_HOST)), '.coi')) {
+            return redirect()->route('wa-blast.page')
+                ->with('status', 'Image URL terdeteksi typo domain (.coi). Gunakan domain .com atau kosongkan URL jika pakai upload.');
+        }
 
         if (blank($data['message'] ?? null) && blank($resolvedImageUrl)) {
             return redirect()->route('wa-blast.page')

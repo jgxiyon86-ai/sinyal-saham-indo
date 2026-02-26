@@ -50,10 +50,13 @@ class AlimaGatewayService
         $lastStatus = 0;
         $lastBody = '';
         foreach ($endpoints as $endpoint) {
-            $response = Http::withHeaders($headers)->post($endpoint, $payload);
-            if ($this->shouldRetryBecauseSessionTransient($response->status(), $response->body())) {
-                usleep(800000);
+            $response = null;
+            for ($attempt = 1; $attempt <= 3; $attempt++) {
                 $response = Http::withHeaders($headers)->post($endpoint, $payload);
+                if (! $this->shouldRetryTransient($response->status(), $response->body(), $attempt)) {
+                    break;
+                }
+                usleep(700000 * $attempt);
             }
 
             if ($response->successful()) {
@@ -75,15 +78,19 @@ class AlimaGatewayService
         throw new RuntimeException('ALIMA Gateway error HTTP '.$lastStatus.': '.$lastBody);
     }
 
-    private function shouldRetryBecauseSessionTransient(int $status, string $body): bool
+    private function shouldRetryTransient(int $status, string $body, int $attempt): bool
     {
-        if ($status < 500) {
+        if ($attempt >= 3 || $status < 500) {
             return false;
         }
 
         $lower = Str::lower($body);
         return Str::contains($lower, 'session belum aktif')
             || Str::contains($lower, 'session not ready')
-            || Str::contains($lower, 'session not active');
+            || Str::contains($lower, 'session not active')
+            || Str::contains($lower, 'connection closed')
+            || Str::contains($lower, 'socket hang up')
+            || Str::contains($lower, 'ecconnreset')
+            || Str::contains($lower, 'etimedout');
     }
 }
