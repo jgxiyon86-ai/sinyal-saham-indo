@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Support\GatewaySetting;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
             $baseUrl = GatewaySetting::baseUrl();
             $apiKey = GatewaySetting::appApiKey();
             $sessionId = GatewaySetting::sessionId();
+            $isGatewayPage = request()->routeIs('gateway-settings.*');
 
             if ($baseUrl === '' || $apiKey === '' || $sessionId === '') {
                 $view->with('headerGatewayStatus', [
@@ -37,8 +39,7 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            $cacheKey = 'header_gateway_status_'.md5($baseUrl.'|'.$apiKey.'|'.$sessionId);
-            $status = Cache::remember($cacheKey, now()->addSeconds(20), function () use ($baseUrl, $apiKey, $sessionId): array {
+            $resolveStatus = function () use ($baseUrl, $apiKey, $sessionId): array {
                 try {
                     $response = Http::timeout(6)
                         ->acceptJson()
@@ -53,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     $sessionState = strtolower((string) $response->json('session.status', 'unknown'));
+                    $lastConnectedAtRaw = (string) $response->json('session.lastConnectedAt', '');
                     if ($sessionState === 'connected') {
                         return [
                             'label' => 'Gateway connected',
@@ -61,6 +63,20 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     if (in_array($sessionState, ['connecting', 'open'], true)) {
+                        if ($lastConnectedAtRaw !== '') {
+                            try {
+                                $lastConnectedAt = Carbon::parse($lastConnectedAtRaw);
+                                if ($lastConnectedAt->greaterThan(now()->subMinutes(2))) {
+                                    return [
+                                        'label' => 'Gateway connected',
+                                        'class' => 'badge-success',
+                                    ];
+                                }
+                            } catch (\Throwable) {
+                                // Ignore parse failure and keep connecting label.
+                            }
+                        }
+
                         return [
                             'label' => 'Gateway connecting',
                             'class' => 'badge-info',
@@ -77,7 +93,14 @@ class AppServiceProvider extends ServiceProvider
                         'class' => 'badge-warn',
                     ];
                 }
-            });
+            };
+
+            if ($isGatewayPage) {
+                $status = $resolveStatus();
+            } else {
+                $cacheKey = 'header_gateway_status_'.md5($baseUrl.'|'.$apiKey.'|'.$sessionId);
+                $status = Cache::remember($cacheKey, now()->addSeconds(20), $resolveStatus);
+            }
 
             $view->with('headerGatewayStatus', $status);
         });

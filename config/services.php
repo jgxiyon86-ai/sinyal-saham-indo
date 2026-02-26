@@ -35,12 +35,6 @@ return [
         ],
     ],
 
-    'fonnte' => [
-        'token' => env('FONNTE_TOKEN'),
-        'base_url' => env('FONNTE_BASE_URL', 'https://api.fonnte.com'),
-        'country_code' => env('FONNTE_COUNTRY_CODE', '62'),
-    ],
-
     'alima_gateway' => [
         'base_url' => env('ALIMA_GATEWAY_BASE_URL', 'http://127.0.0.1:3210'),
         'panel_url' => env('ALIMA_GATEWAY_PANEL_URL', 'https://panelhub.cuanholic.com'),

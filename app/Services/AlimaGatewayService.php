@@ -5,9 +5,10 @@ namespace App\Services;
 use App\Support\WaNumber;
 use App\Support\GatewaySetting;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use RuntimeException;
 
-class FonnteService
+class AlimaGatewayService
 {
     public function sendMessage(string $target, string $message, ?string $imageUrl = null): array
     {
@@ -50,6 +51,11 @@ class FonnteService
         $lastBody = '';
         foreach ($endpoints as $endpoint) {
             $response = Http::withHeaders($headers)->post($endpoint, $payload);
+            if ($this->shouldRetryBecauseSessionTransient($response->status(), $response->body())) {
+                usleep(800000);
+                $response = Http::withHeaders($headers)->post($endpoint, $payload);
+            }
+
             if ($response->successful()) {
                 return $response->json() ?? [
                     'status' => true,
@@ -67,5 +73,17 @@ class FonnteService
         }
 
         throw new RuntimeException('ALIMA Gateway error HTTP '.$lastStatus.': '.$lastBody);
+    }
+
+    private function shouldRetryBecauseSessionTransient(int $status, string $body): bool
+    {
+        if ($status < 500) {
+            return false;
+        }
+
+        $lower = Str::lower($body);
+        return Str::contains($lower, 'session belum aktif')
+            || Str::contains($lower, 'session not ready')
+            || Str::contains($lower, 'session not active');
     }
 }

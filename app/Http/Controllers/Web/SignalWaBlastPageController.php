@@ -9,7 +9,7 @@ use App\Models\SignalWaBlastTarget;
 use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
-use App\Services\FonnteService;
+use App\Services\AlimaGatewayService;
 use App\Support\GatewaySetting;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +23,7 @@ use Throwable;
 
 class SignalWaBlastPageController extends Controller
 {
-    public function __construct(private readonly FonnteService $fonnteService)
+    public function __construct(private readonly AlimaGatewayService $alimaGatewayService)
     {
     }
 
@@ -530,3 +530,4 @@ class SignalWaBlastPageController extends Controller
         ])->save();
     }
 }
+

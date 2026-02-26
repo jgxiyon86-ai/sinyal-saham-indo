@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Models\WaBlastLog;
-use App\Services\FonnteService;
+use App\Services\AlimaGatewayService;
 use App\Support\GatewaySetting;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
@@ -17,7 +17,7 @@ class SendAutomaticBirthdayWa extends Command
 
     protected $description = 'Kirim otomatis WA ulang tahun untuk klient yang berulang tahun hari ini.';
 
-    public function handle(FonnteService $fonnteService): int
+    public function handle(AlimaGatewayService $alimaGatewayService): int
     {
         $date = $this->option('date')
             ? Carbon::parse((string) $this->option('date'))
@@ -106,7 +106,7 @@ class SendAutomaticBirthdayWa extends Command
             }
 
             try {
-                $result = $fonnteService->sendMessage(
+                $result = $alimaGatewayService->sendMessage(
                     (string) $client->whatsapp_number,
                     $message,
                     $template->image_url
@@ -181,3 +181,4 @@ class SendAutomaticBirthdayWa extends Command
         ]);
     }
 }
+

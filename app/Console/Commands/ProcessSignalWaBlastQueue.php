@@ -6,7 +6,7 @@ use App\Models\Signal;
 use App\Models\SignalWaBlastBatch;
 use App\Models\SignalWaBlastTarget;
 use App\Models\Tier;
-use App\Services\FonnteService;
+use App\Services\AlimaGatewayService;
 use App\Support\GatewaySetting;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +19,7 @@ class ProcessSignalWaBlastQueue extends Command
 
     protected $description = 'Proses antrian WA Blast Sinyal bertahap sesuai batas per tier.';
 
-    public function __construct(private readonly FonnteService $fonnteService)
+    public function __construct(private readonly AlimaGatewayService $alimaGatewayService)
     {
         parent::__construct();
     }
@@ -98,7 +98,7 @@ class ProcessSignalWaBlastQueue extends Command
 
         foreach ($picked as $idx => $target) {
             try {
-                $response = $this->fonnteService->sendMessage(
+                $response = $this->alimaGatewayService->sendMessage(
                     (string) $target->whatsapp_number,
                     (string) $target->message,
                     $target->image_url
@@ -177,4 +177,5 @@ class ProcessSignalWaBlastQueue extends Command
         }
     }
 }
+
 

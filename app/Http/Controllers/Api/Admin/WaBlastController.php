@@ -7,7 +7,7 @@ use App\Models\MessageTemplate;
 use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
-use App\Services\FonnteService;
+use App\Services\AlimaGatewayService;
 use App\Support\GatewaySetting;
 use App\Support\WaNumber;
 use Illuminate\Database\Eloquent\Builder;
@@ -164,7 +164,7 @@ class WaBlastController extends Controller
         ]);
     }
 
-    public function manualSend(Request $request, FonnteService $fonnteService): JsonResponse
+    public function manualSend(Request $request, AlimaGatewayService $alimaGatewayService): JsonResponse
     {
         $data = $request->validate([
             'whatsapp_number' => ['required', 'string', 'max:30', 'regex:'.WaNumber::validationRegex()],
@@ -198,7 +198,7 @@ class WaBlastController extends Controller
         }
 
         try {
-            $response = $fonnteService->sendMessage(
+            $response = $alimaGatewayService->sendMessage(
                 $data['whatsapp_number'],
                 (string) ($data['message'] ?? ''),
                 $resolvedImageUrl
@@ -327,3 +327,4 @@ class WaBlastController extends Controller
         return Storage::disk('public')->url($path);
     }
 }
+

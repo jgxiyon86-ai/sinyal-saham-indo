@@ -7,7 +7,7 @@ use App\Models\MessageTemplate;
 use App\Models\Tier;
 use App\Models\User;
 use App\Models\WaBlastLog;
-use App\Services\FonnteService;
+use App\Services\AlimaGatewayService;
 use App\Support\GatewaySetting;
 use App\Support\WaNumber;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,7 +26,7 @@ class WaBlastPageController extends Controller
 {
     private array $religions;
 
-    public function __construct(private readonly FonnteService $fonnteService)
+    public function __construct(private readonly AlimaGatewayService $alimaGatewayService)
     {
         $this->religions = array_keys(config('religions.options', []));
     }
@@ -102,7 +102,7 @@ class WaBlastPageController extends Controller
 
         foreach ($messages as $item) {
             try {
-                $response = $this->fonnteService->sendMessage(
+                $response = $this->alimaGatewayService->sendMessage(
                     (string) $item['whatsapp_number'],
                     (string) $item['message'],
                     $template->image_url
@@ -176,7 +176,7 @@ class WaBlastPageController extends Controller
         }
 
         try {
-            $response = $this->fonnteService->sendMessage(
+            $response = $this->alimaGatewayService->sendMessage(
                 $data['whatsapp_number'],
                 (string) ($data['message'] ?? ''),
                 $resolvedImageUrl
@@ -364,3 +364,4 @@ class WaBlastPageController extends Controller
         return $base.'/'.ltrim($trimmed, '/');
     }
 }
+
