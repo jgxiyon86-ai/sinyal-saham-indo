@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Admin Sinyal Saham"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Buat sinyal lalu kirim WA blast dari tombol di bawah."
+            android:textColor="#5A7193"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_card_white_16"
+            android:padding="10dp"
+            android:textColor="#1A4E90"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Form Sinyal"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Judul sinyal"
+            android:inputType="textCapSentences" />
+
+        <EditText
+            android:id="@+id/etStockCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Kode saham (BBRI)"
+            android:inputType="textCapCharacters" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Tipe Sinyal (dropdown)" />
+
+        <Spinner
+            android:id="@+id/spSignalType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <EditText
+            android:id="@+id/etEntry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Entry (opsional)"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/etTp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Take Profit (opsional)"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/etSl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Stop Loss (opsional)"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/etImageUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Image URL sinyal (opsional)"
+            android:inputType="textUri" />
+
+        <EditText
+            android:id="@+id/etNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Catatan (opsional)"
+            android:inputType="textMultiLine"
+            android:minLines="3" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Tier Target Sinyal" />
+
+        <Spinner
+            android:id="@+id/spTierTarget"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCreateSignal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Kirim Sinyal" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="WA Blast Sinyal"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etSignalIds"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Signal ID, contoh: 12 atau 12,13"
+            android:inputType="text" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Tier Blast (opsional)" />
+
+        <Spinner
+            android:id="@+id/spBlastTier"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSendWaBlast"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Send WA Blast" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Logout" />
+    </LinearLayout>
+</ScrollView>

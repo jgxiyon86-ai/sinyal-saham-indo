@@ -1,0 +1,46 @@
+[
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/drawable_bg_login_stock_modal.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/drawable/bg_login_stock_modal.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/layout_activity_splash.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/layout_activity_main.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/drawable_bg_signal_buy.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/drawable/bg_signal_buy.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/drawable_ic_stat_signal.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/drawable/ic_stat_signal.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/layout_activity_login.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/activity_login.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/drawable_bg_signal_sell.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/drawable/bg_signal_sell.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/drawable_bg_card_white_16.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/drawable/bg_card_white_16.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/drawable_bg_signal_hold.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/drawable/bg_signal_hold.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/xml_network_security_config.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-debug-49:/layout_item_signal_chat.xml.flat",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/item_signal_chat.xml"
+    }
+]

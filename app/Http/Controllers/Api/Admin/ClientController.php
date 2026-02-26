@@ -107,6 +107,32 @@ class ClientController extends Controller
         ]);
     }
 
+    public function pindah(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'to_tier_id' => ['required', 'exists:tiers,id'],
+            'client_ids' => ['required_without:from_tier_id', 'array'],
+            'client_ids.*' => ['integer', 'exists:users,id'],
+            'from_tier_id' => ['required_without:client_ids', 'integer', 'exists:tiers,id'],
+        ]);
+
+        $query = User::query()->where('role', 'client');
+
+        if ($request->has('client_ids')) {
+            $query->whereIn('id', $request->input('client_ids'));
+        } else {
+            $query->where('tier_id', $request->input('from_tier_id'));
+        }
+
+        $count = $query->count();
+        $query->update(['tier_id' => $data['to_tier_id']]);
+
+        return response()->json([
+            'message' => "Berhasil memindahkan $count client ke tier baru.",
+            'count' => $count,
+        ]);
+    }
+
     public function destroy(User $client): JsonResponse
     {
         $this->ensureClientRole($client);

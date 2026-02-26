@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "com.alima.sinyalsahamindo.app-mergeDebugResources-48:/layout/activity_splash.xml",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-mergeDebugResources-48:/layout/item_signal_chat.xml",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/item_signal_chat.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-mergeDebugResources-48:/layout/activity_login.xml",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/activity_login.xml"
+    },
+    {
+        "merged": "com.alima.sinyalsahamindo.app-mergeDebugResources-48:/layout/activity_main.xml",
+        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/activity_main.xml"
+    }
+]

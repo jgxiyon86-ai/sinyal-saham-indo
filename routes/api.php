@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\ClientController;
 use App\Http\Controllers\Api\Admin\MessageTemplateController;
 use App\Http\Controllers\Api\Admin\PushController;
 use App\Http\Controllers\Api\Admin\SignalController;
+use App\Http\Controllers\Api\Admin\SignalWaBlastController;
 use App\Http\Controllers\Api\Admin\TierController;
 use App\Http\Controllers\Api\Admin\WaBlastController;
 use App\Http\Controllers\Api\AuthController;
@@ -21,8 +22,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('admin')->prefix('admin')->name('api.admin.')->group(function () {
         Route::apiResource('tiers', TierController::class);
+        Route::post('clients/pindah', [ClientController::class, 'pindah']);
         Route::apiResource('clients', ClientController::class);
         Route::apiResource('signals', SignalController::class);
+        Route::post('signals/wa-blast', [SignalWaBlastController::class, 'send']);
         Route::apiResource('message-templates', MessageTemplateController::class);
         Route::post('push/broadcast', [PushController::class, 'broadcast']);
         Route::get('wa-blast-targets', [WaBlastController::class, 'index']);

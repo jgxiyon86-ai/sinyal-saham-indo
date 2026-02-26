@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "177356033944",
+    "project_id": "sahamindo-d46b0",
+    "storage_bucket": "sahamindo-d46b0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:177356033944:android:91037db6a1012230c1e5ed",
+        "android_client_info": {
+          "package_name": "com.alima.sinyalsahamindo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5iRnwJfw5td9EAklMoxGHL5l0WCkhFP4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
