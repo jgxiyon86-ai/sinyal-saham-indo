@@ -67,6 +67,11 @@
             justify-content: space-between;
             align-items: center;
         }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .admin-name { font-weight: 600; font-size: 14px; }
         .topbar form { margin: 0; }
         .logout-btn {
@@ -261,10 +266,14 @@
     <div class="content">
         <header class="topbar">
             <div class="admin-name">Login sebagai: {{ auth()->user()->name }}</div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="logout-btn" type="submit">Logout</button>
-            </form>
+            <div class="topbar-right">
+                @php($gwStatus = $headerGatewayStatus ?? ['label' => 'Gateway status n/a', 'class' => 'badge-muted'])
+                <span class="badge {{ $gwStatus['class'] ?? 'badge-muted' }}">{{ $gwStatus['label'] ?? 'Gateway status n/a' }}</span>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="logout-btn" type="submit">Logout</button>
+                </form>
+            </div>
         </header>
 
         <main class="main-card">
