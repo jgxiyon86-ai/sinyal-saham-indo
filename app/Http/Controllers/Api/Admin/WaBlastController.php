@@ -41,7 +41,14 @@ class WaBlastController extends Controller
             $query->where('religion', $request->string('religion'));
         }
 
-        $targets = $this->applyTierBlastLimit($query->get($this->targetColumns()));
+        $targets = $query->get($this->targetColumns());
+        
+        // Filter valid numbers in PHP to avoid SQLite "regexp" error
+        $targets = $targets->filter(function ($client) {
+            return preg_match('/^(\+62|62|0)?8[0-9]{7,13}$/', (string) $client->whatsapp_number);
+        });
+
+        $targets = $this->applyTierBlastLimit($targets);
 
         return response()->json([
             'targets' => $targets->values(),
@@ -66,7 +73,14 @@ class WaBlastController extends Controller
             $query->where('religion', $request->string('religion'));
         }
 
-        $targets = $this->applyTierBlastLimit($query->get($this->targetColumns()));
+        $targets = $query->get($this->targetColumns());
+
+        // Filter valid numbers in PHP
+        $targets = $targets->filter(function ($client) {
+            return preg_match('/^(\+62|62|0)?8[0-9]{7,13}$/', (string) $client->whatsapp_number);
+        });
+
+        $targets = $this->applyTierBlastLimit($targets);
 
         return response()->json([
             'date' => $date->toDateString(),
@@ -88,7 +102,14 @@ class WaBlastController extends Controller
             $query->where('tier_id', $data['tier_id']);
         }
 
-        $targets = $this->applyTierBlastLimit($query->get($this->targetColumns()));
+        $targets = $query->get($this->targetColumns());
+
+        // Filter valid numbers in PHP
+        $targets = $targets->filter(function ($client) {
+            return preg_match('/^(\+62|62|0)?8[0-9]{7,13}$/', (string) $client->whatsapp_number);
+        });
+
+        $targets = $this->applyTierBlastLimit($targets);
 
         return response()->json([
             'religion' => $data['religion'],
@@ -131,7 +152,15 @@ class WaBlastController extends Controller
                 ->whereDay('birth_date', $date->day);
         }
 
-        $targets = $this->applyTierBlastLimit($query->get($this->targetColumns()));
+        $targets = $query->get($this->targetColumns());
+
+        // Filter valid numbers in PHP
+        $targets = $targets->filter(function ($client) {
+            return preg_match('/^(\+62|62|0)?8[0-9]{7,13}$/', (string) $client->whatsapp_number);
+        });
+
+        $targets = $this->applyTierBlastLimit($targets);
+        
         $rendered = $targets->map(function (User $client) use ($template, $date) {
             return [
                 'client_id' => $client->id,
@@ -262,8 +291,7 @@ class WaBlastController extends Controller
             ->with('tier:id,name')
             ->where('role', 'client')
             ->where('is_active', true)
-            ->whereNotNull('whatsapp_number')
-            ->where('whatsapp_number', 'regexp', '^(\\+62|62|0)?8[0-9]{7,13}$');
+            ->whereNotNull('whatsapp_number');
     }
 
     private function targetColumns(): array

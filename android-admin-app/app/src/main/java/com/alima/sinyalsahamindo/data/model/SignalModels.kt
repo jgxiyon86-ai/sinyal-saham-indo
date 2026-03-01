@@ -1,8 +1,32 @@
 package com.alima.sinyalsahamindo.data.model
 
+import com.google.gson.JsonElement
+import com.google.gson.Gson
+
 data class SignalResponse(
-    val signals: List<SignalItem> = emptyList()
-)
+    val signals: JsonElement? = null
+) {
+    fun getSignalList(): List<SignalItem> {
+        val element = signals ?: return emptyList()
+        val gson = Gson()
+        return try {
+            if (element.isJsonArray) {
+                element.asJsonArray.map { gson.fromJson(it, SignalItem::class.java) }
+            } else if (element.isJsonObject) {
+                val data = element.asJsonObject.get("data")
+                if (data != null && data.isJsonArray) {
+                    data.asJsonArray.map { gson.fromJson(it, SignalItem::class.java) }
+                } else {
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+}
 
 data class SignalItem(
     val id: Int,
@@ -13,7 +37,9 @@ data class SignalItem(
     val take_profit: String?,
     val stop_loss: String?,
     val note: String?,
-    val published_at: String?
+    val published_at: String?,
+    val expires_at: String?,
+    val tier_target: String? = null
 )
 
 data class AdminCreateSignalRequest(
@@ -38,4 +64,22 @@ data class AdminCreateSignalResponse(
 data class SignalWaBlastRequest(
     val signal_ids: List<Int>,
     val tier_id: Int?
+)
+
+data class WaBlastHistoryResponse(
+    val history: List<WaLogItem>?
+)
+
+data class WaLogItem(
+    val id: Int,
+    val blast_type: String?,
+    val recipients_count: Int,
+    val status: String?,
+    val blasted_at: String?,
+    val admin: AdminShortInfo?
+)
+
+data class AdminShortInfo(
+    val id: Int,
+    val name: String?
 )

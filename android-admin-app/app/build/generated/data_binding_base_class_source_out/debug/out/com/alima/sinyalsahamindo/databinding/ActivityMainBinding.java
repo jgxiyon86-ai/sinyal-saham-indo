@@ -4,44 +4,62 @@ package com.alima.sinyalsahamindo.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ScrollView;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.alima.sinyalsahamindo.R;
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.bottomappbar.BottomAppBar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.lang.NullPointerException;
 import java.lang.Override;
 import java.lang.String;
 
 public final class ActivityMainBinding implements ViewBinding {
   @NonNull
-  private final ScrollView rootView;
+  private final RelativeLayout rootView;
 
   @NonNull
-  public final MaterialButton btnCreateSignal;
+  public final BottomAppBar bottomBarLayout;
 
   @NonNull
-  public final MaterialButton btnLogout;
+  public final BottomNavigationView bottomNavigation;
 
   @NonNull
-  public final MaterialButton btnSendWaBlast;
+  public final Button btnFinalBlast;
+
+  @NonNull
+  public final ImageButton btnLogout;
+
+  @NonNull
+  public final ImageButton btnProfile;
+
+  @NonNull
+  public final Button btnSubmitCreate;
+
+  @NonNull
+  public final FrameLayout container;
 
   @NonNull
   public final EditText etEntry;
 
   @NonNull
-  public final EditText etImageUrl;
+  public final EditText etExpiresAt;
 
   @NonNull
-  public final EditText etNote;
-
-  @NonNull
-  public final EditText etSignalIds;
+  public final EditText etPublishedAt;
 
   @NonNull
   public final EditText etSl;
@@ -56,7 +74,25 @@ public final class ActivityMainBinding implements ViewBinding {
   public final EditText etTp;
 
   @NonNull
-  public final Spinner spBlastTier;
+  public final FloatingActionButton fabAdd;
+
+  @NonNull
+  public final LinearLayout header;
+
+  @NonNull
+  public final LinearLayout layoutBlast;
+
+  @NonNull
+  public final NestedScrollView layoutCreate;
+
+  @NonNull
+  public final SwipeRefreshLayout layoutHistory;
+
+  @NonNull
+  public final RecyclerView rvSignals;
+
+  @NonNull
+  public final RecyclerView rvWaHistory;
 
   @NonNull
   public final Spinner spSignalType;
@@ -65,35 +101,59 @@ public final class ActivityMainBinding implements ViewBinding {
   public final Spinner spTierTarget;
 
   @NonNull
+  public final TextView tvBlastWarning;
+
+  @NonNull
+  public final TextView tvSelectCount;
+
+  @NonNull
   public final TextView tvStatus;
 
-  private ActivityMainBinding(@NonNull ScrollView rootView, @NonNull MaterialButton btnCreateSignal,
-      @NonNull MaterialButton btnLogout, @NonNull MaterialButton btnSendWaBlast,
-      @NonNull EditText etEntry, @NonNull EditText etImageUrl, @NonNull EditText etNote,
-      @NonNull EditText etSignalIds, @NonNull EditText etSl, @NonNull EditText etStockCode,
-      @NonNull EditText etTitle, @NonNull EditText etTp, @NonNull Spinner spBlastTier,
-      @NonNull Spinner spSignalType, @NonNull Spinner spTierTarget, @NonNull TextView tvStatus) {
+  private ActivityMainBinding(@NonNull RelativeLayout rootView,
+      @NonNull BottomAppBar bottomBarLayout, @NonNull BottomNavigationView bottomNavigation,
+      @NonNull Button btnFinalBlast, @NonNull ImageButton btnLogout,
+      @NonNull ImageButton btnProfile, @NonNull Button btnSubmitCreate,
+      @NonNull FrameLayout container, @NonNull EditText etEntry, @NonNull EditText etExpiresAt,
+      @NonNull EditText etPublishedAt, @NonNull EditText etSl, @NonNull EditText etStockCode,
+      @NonNull EditText etTitle, @NonNull EditText etTp, @NonNull FloatingActionButton fabAdd,
+      @NonNull LinearLayout header, @NonNull LinearLayout layoutBlast,
+      @NonNull NestedScrollView layoutCreate, @NonNull SwipeRefreshLayout layoutHistory,
+      @NonNull RecyclerView rvSignals, @NonNull RecyclerView rvWaHistory,
+      @NonNull Spinner spSignalType, @NonNull Spinner spTierTarget,
+      @NonNull TextView tvBlastWarning, @NonNull TextView tvSelectCount,
+      @NonNull TextView tvStatus) {
     this.rootView = rootView;
-    this.btnCreateSignal = btnCreateSignal;
+    this.bottomBarLayout = bottomBarLayout;
+    this.bottomNavigation = bottomNavigation;
+    this.btnFinalBlast = btnFinalBlast;
     this.btnLogout = btnLogout;
-    this.btnSendWaBlast = btnSendWaBlast;
+    this.btnProfile = btnProfile;
+    this.btnSubmitCreate = btnSubmitCreate;
+    this.container = container;
     this.etEntry = etEntry;
-    this.etImageUrl = etImageUrl;
-    this.etNote = etNote;
-    this.etSignalIds = etSignalIds;
+    this.etExpiresAt = etExpiresAt;
+    this.etPublishedAt = etPublishedAt;
     this.etSl = etSl;
     this.etStockCode = etStockCode;
     this.etTitle = etTitle;
     this.etTp = etTp;
-    this.spBlastTier = spBlastTier;
+    this.fabAdd = fabAdd;
+    this.header = header;
+    this.layoutBlast = layoutBlast;
+    this.layoutCreate = layoutCreate;
+    this.layoutHistory = layoutHistory;
+    this.rvSignals = rvSignals;
+    this.rvWaHistory = rvWaHistory;
     this.spSignalType = spSignalType;
     this.spTierTarget = spTierTarget;
+    this.tvBlastWarning = tvBlastWarning;
+    this.tvSelectCount = tvSelectCount;
     this.tvStatus = tvStatus;
   }
 
   @Override
   @NonNull
-  public ScrollView getRoot() {
+  public RelativeLayout getRoot() {
     return rootView;
   }
 
@@ -118,21 +178,45 @@ public final class ActivityMainBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.btnCreateSignal;
-      MaterialButton btnCreateSignal = ViewBindings.findChildViewById(rootView, id);
-      if (btnCreateSignal == null) {
+      id = R.id.bottomBarLayout;
+      BottomAppBar bottomBarLayout = ViewBindings.findChildViewById(rootView, id);
+      if (bottomBarLayout == null) {
+        break missingId;
+      }
+
+      id = R.id.bottomNavigation;
+      BottomNavigationView bottomNavigation = ViewBindings.findChildViewById(rootView, id);
+      if (bottomNavigation == null) {
+        break missingId;
+      }
+
+      id = R.id.btnFinalBlast;
+      Button btnFinalBlast = ViewBindings.findChildViewById(rootView, id);
+      if (btnFinalBlast == null) {
         break missingId;
       }
 
       id = R.id.btnLogout;
-      MaterialButton btnLogout = ViewBindings.findChildViewById(rootView, id);
+      ImageButton btnLogout = ViewBindings.findChildViewById(rootView, id);
       if (btnLogout == null) {
         break missingId;
       }
 
-      id = R.id.btnSendWaBlast;
-      MaterialButton btnSendWaBlast = ViewBindings.findChildViewById(rootView, id);
-      if (btnSendWaBlast == null) {
+      id = R.id.btnProfile;
+      ImageButton btnProfile = ViewBindings.findChildViewById(rootView, id);
+      if (btnProfile == null) {
+        break missingId;
+      }
+
+      id = R.id.btnSubmitCreate;
+      Button btnSubmitCreate = ViewBindings.findChildViewById(rootView, id);
+      if (btnSubmitCreate == null) {
+        break missingId;
+      }
+
+      id = R.id.container;
+      FrameLayout container = ViewBindings.findChildViewById(rootView, id);
+      if (container == null) {
         break missingId;
       }
 
@@ -142,21 +226,15 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.etImageUrl;
-      EditText etImageUrl = ViewBindings.findChildViewById(rootView, id);
-      if (etImageUrl == null) {
+      id = R.id.etExpiresAt;
+      EditText etExpiresAt = ViewBindings.findChildViewById(rootView, id);
+      if (etExpiresAt == null) {
         break missingId;
       }
 
-      id = R.id.etNote;
-      EditText etNote = ViewBindings.findChildViewById(rootView, id);
-      if (etNote == null) {
-        break missingId;
-      }
-
-      id = R.id.etSignalIds;
-      EditText etSignalIds = ViewBindings.findChildViewById(rootView, id);
-      if (etSignalIds == null) {
+      id = R.id.etPublishedAt;
+      EditText etPublishedAt = ViewBindings.findChildViewById(rootView, id);
+      if (etPublishedAt == null) {
         break missingId;
       }
 
@@ -184,9 +262,45 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.spBlastTier;
-      Spinner spBlastTier = ViewBindings.findChildViewById(rootView, id);
-      if (spBlastTier == null) {
+      id = R.id.fabAdd;
+      FloatingActionButton fabAdd = ViewBindings.findChildViewById(rootView, id);
+      if (fabAdd == null) {
+        break missingId;
+      }
+
+      id = R.id.header;
+      LinearLayout header = ViewBindings.findChildViewById(rootView, id);
+      if (header == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutBlast;
+      LinearLayout layoutBlast = ViewBindings.findChildViewById(rootView, id);
+      if (layoutBlast == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutCreate;
+      NestedScrollView layoutCreate = ViewBindings.findChildViewById(rootView, id);
+      if (layoutCreate == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutHistory;
+      SwipeRefreshLayout layoutHistory = ViewBindings.findChildViewById(rootView, id);
+      if (layoutHistory == null) {
+        break missingId;
+      }
+
+      id = R.id.rvSignals;
+      RecyclerView rvSignals = ViewBindings.findChildViewById(rootView, id);
+      if (rvSignals == null) {
+        break missingId;
+      }
+
+      id = R.id.rvWaHistory;
+      RecyclerView rvWaHistory = ViewBindings.findChildViewById(rootView, id);
+      if (rvWaHistory == null) {
         break missingId;
       }
 
@@ -202,15 +316,29 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvBlastWarning;
+      TextView tvBlastWarning = ViewBindings.findChildViewById(rootView, id);
+      if (tvBlastWarning == null) {
+        break missingId;
+      }
+
+      id = R.id.tvSelectCount;
+      TextView tvSelectCount = ViewBindings.findChildViewById(rootView, id);
+      if (tvSelectCount == null) {
+        break missingId;
+      }
+
       id = R.id.tvStatus;
       TextView tvStatus = ViewBindings.findChildViewById(rootView, id);
       if (tvStatus == null) {
         break missingId;
       }
 
-      return new ActivityMainBinding((ScrollView) rootView, btnCreateSignal, btnLogout,
-          btnSendWaBlast, etEntry, etImageUrl, etNote, etSignalIds, etSl, etStockCode, etTitle,
-          etTp, spBlastTier, spSignalType, spTierTarget, tvStatus);
+      return new ActivityMainBinding((RelativeLayout) rootView, bottomBarLayout, bottomNavigation,
+          btnFinalBlast, btnLogout, btnProfile, btnSubmitCreate, container, etEntry, etExpiresAt,
+          etPublishedAt, etSl, etStockCode, etTitle, etTp, fabAdd, header, layoutBlast,
+          layoutCreate, layoutHistory, rvSignals, rvWaHistory, spSignalType, spTierTarget,
+          tvBlastWarning, tvSelectCount, tvStatus);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

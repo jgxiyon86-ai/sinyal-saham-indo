@@ -8,6 +8,7 @@ import com.alima.sinyalsahamindo.databinding.ActivitySplashBinding
 import com.alima.sinyalsahamindo.util.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.google.firebase.FirebaseApp
 
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
@@ -17,6 +18,7 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FirebaseApp.initializeApp(this)
         sessionManager = SessionManager(this)
 
         lifecycleScope.launch {

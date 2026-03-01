@@ -61,6 +61,7 @@ class LoginActivity : AppCompatActivity() {
                             return@launch
                         }
                         sessionManager.saveToken(token)
+                        response.body()?.user?.email?.let { sessionManager.saveEmail(it) }
                         startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                         finish()
                     } else {

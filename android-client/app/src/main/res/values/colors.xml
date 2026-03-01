@@ -6,4 +6,5 @@
     <color name="white">#FFFFFF</color>
     <color name="green_buy">#1F9D55</color>
     <color name="red_sell">#E53935</color>
+    <color name="navy_icon">#0A192F</color>
 </resources>

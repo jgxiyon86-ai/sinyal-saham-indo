@@ -392,14 +392,19 @@ class SignalWaBlastPageController extends Controller
         $clientsQuery = User::query()
             ->where('role', 'client')
             ->where('is_active', true)
-            ->whereNotNull('whatsapp_number')
-            ->where('whatsapp_number', 'regexp', '^(\\+62|62|0)?8[0-9]{7,13}$');
+            ->whereNotNull('whatsapp_number');
 
         if (! empty($payload['tier_id'])) {
             $clientsQuery->where('tier_id', $payload['tier_id']);
         }
 
         $clients = $clientsQuery->with('tier:id,name')->limit(1500)->get();
+
+        // Filter valid numbers in PHP
+        $clients = $clients->filter(function ($client) {
+            return preg_match('/^(\+62|62|0)?8[0-9]{7,13}$/', (string) $client->whatsapp_number);
+        });
+
         $clients = $this->applyTierBlastLimit($clients);
 
         $targets = $clients->map(function (User $client) use ($signals, $payload) {

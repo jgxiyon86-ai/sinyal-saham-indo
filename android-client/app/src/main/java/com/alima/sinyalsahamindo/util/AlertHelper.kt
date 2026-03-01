@@ -11,6 +11,7 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.alima.sinyalsahamindo.R
@@ -41,16 +42,21 @@ object AlertHelper {
     fun hardAlert(context: Context, signal: SignalItem) {
         createChannel(context)
 
+        // Wake up screen
+        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE, "SinyalSaham:WakeLock")
+        wakeLock.acquire(3000)
+
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 500, 250, 500), -1))
+            vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 800, 400, 800), -1))
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(longArrayOf(0, 500, 250, 500), -1)
+            vibrator.vibrate(longArrayOf(0, 800, 400, 800), -1)
         }
 
         val tone = ToneGenerator(AudioManager.STREAM_ALARM, 100)
-        tone.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 800)
+        tone.startTone(ToneGenerator.TONE_CDMA_HIGH_L, 1000)
 
         val openMainIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -72,19 +78,17 @@ object AlertHelper {
         )
 
         val messageText = "${signal.stock_code ?: "-"} ${signal.signal_type?.uppercase() ?: ""}"
-        val style = NotificationCompat.MessagingStyle("Admin Sinyal")
-            .addMessage(messageText, System.currentTimeMillis(), "Admin")
-
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_signal)
-            .setContentTitle("Sinyal Baru Masuk")
+            .setContentTitle("Sinyal Baru: ${signal.stock_code}")
             .setContentText(signal.title ?: "Cek sinyal terbaru sekarang")
-            .setStyle(style)
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
             .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setContentIntent(pendingIntent)
+            .setFullScreenIntent(pendingIntent, true) // Make it "Hard"
             .setAutoCancel(true)
+            .setVibrate(longArrayOf(0, 800, 400, 800))
             .build()
 
         NotificationManagerCompat.from(context).notify(signal.id, notification)

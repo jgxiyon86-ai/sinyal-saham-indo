@@ -275,6 +275,12 @@ class WaBlastPageController extends Controller
         }
 
         $clients = $clientsQuery->with('tier')->limit(1500)->get();
+
+        // Filter valid numbers in PHP
+        $clients = $clients->filter(function ($client) {
+            return preg_match('/^(\+62|62|0)?8[0-9]{7,13}$/', (string) $client->whatsapp_number);
+        });
+
         $limitedClients = $this->applyTierBlastLimit($clients);
 
         $messages = $limitedClients->map(function (User $client) use ($template, $date) {
@@ -325,8 +331,7 @@ class WaBlastPageController extends Controller
         return User::query()
             ->where('role', 'client')
             ->where('is_active', true)
-            ->whereNotNull('whatsapp_number')
-            ->where('whatsapp_number', 'regexp', '^(\\+62|62|0)?8[0-9]{7,13}$');
+            ->whereNotNull('whatsapp_number');
     }
 
     private function renderTemplate(string $content, User $client, Carbon $date): string
@@ -368,4 +373,3 @@ class WaBlastPageController extends Controller
         return $base.'/'.ltrim($trimmed, '/');
     }
 }
-

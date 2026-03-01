@@ -86,7 +86,9 @@ class AppFirebaseMessagingService : FirebaseMessagingService() {
                 take_profit = data["take_profit"],
                 stop_loss = data["stop_loss"],
                 note = data["note"] ?: data["notif_body"] ?: message?.notification?.body,
-                published_at = data["published_at"]
+                published_at = data["published_at"],
+                expires_at = data["expires_at"],
+                tier_target = data["tier_target"]
             )
         }
     }

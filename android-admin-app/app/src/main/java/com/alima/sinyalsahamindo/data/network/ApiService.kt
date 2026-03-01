@@ -14,12 +14,14 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.DELETE
+import retrofit2.http.Path
 
 interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
-    @GET("client/signals")
+    @GET("admin/signals")
     suspend fun getSignals(@Header("Authorization") bearerToken: String): Response<SignalResponse>
 
     @GET("admin/tiers")
@@ -37,6 +39,17 @@ interface ApiService {
         @Body request: SignalWaBlastRequest
     ): Response<Map<String, Any>>
 
+    @GET("admin/signals/wa-blast")
+    suspend fun getWaBlastHistory(
+        @Header("Authorization") bearerToken: String
+    ): Response<com.alima.sinyalsahamindo.data.model.WaBlastHistoryResponse>
+
+    @DELETE("admin/signals/{id}")
+    suspend fun deleteSignal(
+        @Header("Authorization") bearerToken: String,
+        @Path("id") id: Int
+    ): Response<Map<String, Any>>
+
     @POST("auth/logout")
     suspend fun logout(@Header("Authorization") bearerToken: String): Response<Map<String, Any>>
 
@@ -52,4 +65,9 @@ interface ApiService {
         @Header("Authorization") bearerToken: String,
         @Body request: Map<String, Any>
     ): Response<Map<String, Any>>
+    @POST("auth/change-password")
+    suspend fun changePassword(
+        @Header("Authorization") bearerToken: String,
+        @Body request: com.alima.sinyalsahamindo.data.model.ChangePasswordRequest
+    ): Response<com.alima.sinyalsahamindo.data.model.ChangePasswordResponse>
 }

@@ -25,3 +25,12 @@ data class TierItem(
 data class TierListResponse(
     val tiers: List<TierItem> = emptyList()
 )
+data class ChangePasswordRequest(
+    val old_password: String,
+    val new_password: String,
+    val new_password_confirmation: String
+)
+
+data class ChangePasswordResponse(
+    val message: String?
+)

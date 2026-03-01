@@ -8,6 +8,6 @@ class SignalRepository {
         val response = RetrofitProvider.api.getSignals("Bearer $token")
         if (response.code() == 401) throw UnauthorizedException()
         if (!response.isSuccessful) return emptyList()
-        return response.body()?.signals.orEmpty()
+        return response.body()?.getSignalList().orEmpty()
     }
 }

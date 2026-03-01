@@ -18,6 +18,17 @@ use Throwable;
 
 class SignalWaBlastController extends Controller
 {
+    public function index(): JsonResponse
+    {
+        return response()->json([
+            'history' => WaBlastLog::query()
+                ->with('admin:id,name')
+                ->latest()
+                ->limit(50)
+                ->get(),
+        ]);
+    }
+
     public function send(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -47,14 +58,19 @@ class SignalWaBlastController extends Controller
             ->with('tier:id,name')
             ->where('role', 'client')
             ->where('is_active', true)
-            ->whereNotNull('whatsapp_number')
-            ->where('whatsapp_number', 'regexp', '^(\\+62|62|0)?8[0-9]{7,13}$');
+            ->whereNotNull('whatsapp_number');
 
         if (! empty($data['tier_id'])) {
             $clientsQuery->where('tier_id', $data['tier_id']);
         }
 
         $clients = $clientsQuery->limit(1500)->get();
+
+        // Filter valid whatsapp numbers in PHP to avoid SQLite "regexp" error
+        $clients = $clients->filter(function ($client) {
+            return preg_match('/^(\+62|62|0)?8[0-9]{7,13}$/', (string) $client->whatsapp_number);
+        });
+
         $clients = $this->applyTierBlastLimit($clients)->take($maxRecipients)->values();
 
         $jobs = [];
@@ -84,8 +100,10 @@ class SignalWaBlastController extends Controller
 
         if (empty($jobs)) {
             return response()->json([
-                'message' => 'Tidak ada job blast yang cocok.',
+                'message' => 'Tidak ada job blast yang cocok (tier tidak sesuai atau nomor tidak valid).',
                 'targets' => $clients->count(),
+                'sent' => 0,
+                'failed' => 0,
             ]);
         }
 
@@ -160,6 +178,8 @@ class SignalWaBlastController extends Controller
         return response()->json([
             'message' => 'WA blast sinyal masuk queue.',
             'batch_id' => $batch->id,
+            'sent' => count($jobs),
+            'failed' => 0,
             'queued_targets' => count($jobs),
             'targets' => $clients->count(),
             'settings' => [

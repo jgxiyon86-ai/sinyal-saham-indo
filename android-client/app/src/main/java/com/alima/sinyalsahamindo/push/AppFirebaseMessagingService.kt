@@ -12,6 +12,9 @@ import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.google.firebase.FirebaseApp
+import android.os.PowerManager
+import android.content.Context
 
 class AppFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -34,6 +37,11 @@ class AppFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
+        
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SinyalSaham:FCM_WakeLock")
+        wl.acquire(5000)
+
         val signal = parseSignal(message.data, message)
         AlertHelper.hardAlert(applicationContext, signal)
 
@@ -66,14 +74,17 @@ class AppFirebaseMessagingService : FirebaseMessagingService() {
         const val EXTRA_PUBLISHED_AT = "signal_published_at"
 
         fun fetchFcmToken(callback: (String?) -> Unit) {
-            FirebaseMessaging.getInstance().token
-                .addOnCompleteListener { task ->
-                    if (!task.isSuccessful) {
-                        callback(null)
-                        return@addOnCompleteListener
+            runCatching {
+                // Return if already initialized? 
+                FirebaseMessaging.getInstance().token
+                    .addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            callback(null)
+                            return@addOnCompleteListener
+                        }
+                        callback(task.result)
                     }
-                    callback(task.result)
-                }
+            }.onFailure { callback(null) }
         }
 
         fun parseSignal(data: Map<String, String>, message: RemoteMessage? = null): SignalItem {

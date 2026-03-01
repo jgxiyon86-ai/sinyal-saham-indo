@@ -21,6 +21,10 @@ import com.alima.sinyalsahamindo.worker.SignalWorkScheduler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import com.google.firebase.FirebaseApp
+import androidx.work.WorkManager
+import androidx.work.Configuration
+import android.util.Log
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -36,11 +40,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
+        
+        // Manual WorkManager Init as fallback
+        try {
+            val config = Configuration.Builder()
+                .setMinimumLoggingLevel(Log.DEBUG)
+                .build()
+            WorkManager.initialize(this, config)
+        } catch (e: Exception) {
+            // Already initialized is fine
+        }
+        
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+        }
 
         sessionManager = SessionManager(this)
         val token = sessionManager.getToken()
@@ -51,18 +70,20 @@ class MainActivity : AppCompatActivity() {
 
         binding.rvSignals.layoutManager = LinearLayoutManager(this)
         binding.rvSignals.adapter = adapter
-        AppFirebaseMessagingService.fetchFcmToken { token ->
-            if (!token.isNullOrBlank()) {
-                sessionManager.saveFcmToken(token)
-                val bearer = sessionManager.getToken()
-                if (!bearer.isNullOrBlank()) {
-                    lifecycleScope.launch {
-                        try {
-                            com.alima.sinyalsahamindo.data.network.RetrofitProvider.api.updateFcmToken(
-                                "Bearer $bearer",
-                                token
-                            )
-                        } catch (_: Exception) {
+        runCatching {
+            AppFirebaseMessagingService.fetchFcmToken { token ->
+                if (!token.isNullOrBlank()) {
+                    sessionManager.saveFcmToken(token)
+                    val bearer = sessionManager.getToken()
+                    if (!bearer.isNullOrBlank()) {
+                        lifecycleScope.launch {
+                            try {
+                                com.alima.sinyalsahamindo.data.network.RetrofitProvider.api.updateFcmToken(
+                                    "Bearer $bearer",
+                                    token
+                                )
+                            } catch (_: Exception) {
+                            }
                         }
                     }
                 }

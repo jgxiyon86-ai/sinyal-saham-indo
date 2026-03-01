@@ -18,7 +18,8 @@ class SignalController extends Controller
             'signals' => Signal::query()
                 ->with(['tiers:id,name', 'creator:id,name'])
                 ->latest()
-                ->paginate(20),
+                ->get()
+                ->values(),
         ]);
     }
 

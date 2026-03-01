@@ -23,6 +23,12 @@ class SessionManager(context: Context) {
 
     fun getLastSignalId(): Int = prefs.getInt("last_signal_id", 0)
 
+    fun saveEmail(email: String) {
+        prefs.edit().putString("email", email).apply()
+    }
+
+    fun getEmail(): String? = prefs.getString("email", null)
+
     fun clear() {
         prefs.edit().clear().apply()
     }

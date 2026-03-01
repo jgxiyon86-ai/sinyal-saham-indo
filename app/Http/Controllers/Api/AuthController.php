@@ -70,4 +70,24 @@ class AuthController extends Controller
             'message' => 'FCM token berhasil disimpan.',
         ]);
     }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'old_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (! \Illuminate\Support\Facades\Hash::check($data['old_password'], $request->user()->password)) {
+            return response()->json(['message' => 'Password lama salah.'], 422);
+        }
+
+        $request->user()->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($data['new_password']),
+        ]);
+
+        return response()->json([
+            'message' => 'Password berhasil diubah.',
+        ]);
+    }
 }

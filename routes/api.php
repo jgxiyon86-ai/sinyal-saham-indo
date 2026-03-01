@@ -17,6 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/fcm-token', [AuthController::class, 'updateFcmToken']);
+    Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
 
     Route::get('/client/signals', [ClientSignalController::class, 'index']);
 
@@ -24,8 +25,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('tiers', TierController::class);
         Route::post('clients/pindah', [ClientController::class, 'pindah']);
         Route::apiResource('clients', ClientController::class);
-        Route::apiResource('signals', SignalController::class);
+        Route::get('signals/wa-blast', [SignalWaBlastController::class, 'index']);
         Route::post('signals/wa-blast', [SignalWaBlastController::class, 'send']);
+        Route::apiResource('signals', SignalController::class);
         Route::apiResource('message-templates', MessageTemplateController::class);
         Route::post('push/broadcast', [PushController::class, 'broadcast']);
         Route::get('wa-blast-targets', [WaBlastController::class, 'index']);

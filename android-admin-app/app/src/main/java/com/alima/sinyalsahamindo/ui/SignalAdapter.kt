@@ -3,78 +3,68 @@ package com.alima.sinyalsahamindo.ui
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.alima.sinyalsahamindo.R
 import com.alima.sinyalsahamindo.data.model.SignalItem
+import com.alima.sinyalsahamindo.databinding.ItemSignalAdminBinding
 
-class SignalAdapter : RecyclerView.Adapter<SignalAdapter.SignalViewHolder>() {
-    private val items = mutableListOf<SignalItem>()
+class SignalAdapter(
+    private var signals: List<SignalItem>,
+    private val onSelectionChanged: (Set<Int>) -> Unit,
+    private val onDeleteClicked: (SignalItem) -> Unit
+) : RecyclerView.Adapter<SignalAdapter.ViewHolder>() {
 
-    fun submitData(newItems: List<SignalItem>) {
-        items.clear()
-        items.addAll(newItems.sortedByDescending { it.id })
-        notifyDataSetChanged()
+    private val selectedIds = mutableSetOf<Int>()
+
+    inner class ViewHolder(val binding: ItemSignalAdminBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemSignalAdminBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
     }
 
-    fun upsertSignal(signal: SignalItem) {
-        val index = items.indexOfFirst { it.id == signal.id }
-        if (index >= 0) {
-            items[index] = signal
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = signals[position]
+        holder.binding.tvStockCode.text = item.stock_code ?: "???"
+        holder.binding.tvTitle.text = item.title ?: "Sinyal Tanpa Judul"
+        
+        val type = item.signal_type
+        holder.binding.tvTypeTag.text = if (!type.isNullOrBlank()) type.uppercase() else "N/A"
+        
+        // UI Polish - Tag Color
+        if (type?.lowercase() == "buy") {
+            holder.binding.tvTypeTag.setBackgroundResource(R.drawable.bg_button_teal)
         } else {
-            items.add(0, signal)
+            holder.binding.tvTypeTag.setBackgroundResource(R.drawable.bg_input_modern)
         }
-        items.sortByDescending { it.id }
+        
+        holder.binding.tvPriceInfo.text = "E: ${item.entry_price ?: "-"} • TP: ${item.take_profit ?: "-"}"
+        
+        val tier = item.tier_target
+        holder.binding.tvTierInfo.text = if (!tier.isNullOrBlank()) tier.uppercase() else "ALL TIERS"
+
+        holder.binding.tvPublishedAt.text = "Published: ${item.published_at?.replace("T", " ") ?: "-"}"
+        holder.binding.tvExpiresAt.text = "Expires: ${item.expires_at?.replace("T", " ") ?: "-"}"
+
+        // Selection & Delete Logic
+        holder.binding.cbSelect.visibility = View.VISIBLE
+        holder.binding.btnDeleteSignal.visibility = View.VISIBLE
+        
+        holder.binding.cbSelect.setOnCheckedChangeListener(null)
+        holder.binding.cbSelect.isChecked = selectedIds.contains(item.id)
+        holder.binding.cbSelect.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) selectedIds.add(item.id) else selectedIds.remove(item.id)
+            onSelectionChanged(selectedIds)
+        }
+        
+        holder.binding.btnDeleteSignal.setOnClickListener { onDeleteClicked(item) }
+        holder.binding.root.setOnClickListener { holder.binding.cbSelect.toggle() }
+    }
+
+    override fun getItemCount() = signals.size
+
+    fun updateData(newData: List<SignalItem>) {
+        this.signals = newData
         notifyDataSetChanged()
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SignalViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_signal_chat, parent, false)
-        return SignalViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: SignalViewHolder, position: Int) {
-        holder.bind(items[position])
-    }
-
-    override fun getItemCount(): Int = items.size
-
-    class SignalViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val bubble = itemView.findViewById<View>(R.id.bubble)
-        private val tvTitle = itemView.findViewById<TextView>(R.id.tvTitle)
-        private val tvType = itemView.findViewById<TextView>(R.id.tvType)
-        private val tvBody = itemView.findViewById<TextView>(R.id.tvBody)
-        private val tvMeta = itemView.findViewById<TextView>(R.id.tvMeta)
-
-        fun bind(item: SignalItem) {
-            tvTitle.text = item.title ?: "-"
-            val type = item.signal_type?.uppercase() ?: "-"
-            tvType.text = "[$type] ${item.stock_code ?: "-"}"
-
-            val body = buildString {
-                append("Entry: ${item.entry_price ?: "-"}")
-                append("\nTP: ${item.take_profit ?: "-"} | SL: ${item.stop_loss ?: "-"}")
-                if (!item.note.isNullOrBlank()) {
-                    append("\nCatatan: ${item.note}")
-                }
-            }
-            tvBody.text = body
-            tvMeta.text = item.published_at ?: ""
-
-            when (item.signal_type?.lowercase()) {
-                "buy" -> {
-                    bubble.setBackgroundResource(R.drawable.bg_signal_buy)
-                    tvType.setTextColor(itemView.context.getColor(R.color.green_buy))
-                }
-                "sell" -> {
-                    bubble.setBackgroundResource(R.drawable.bg_signal_sell)
-                    tvType.setTextColor(itemView.context.getColor(R.color.red_sell))
-                }
-                else -> {
-                    bubble.setBackgroundResource(R.drawable.bg_signal_hold)
-                    tvType.setTextColor(itemView.context.getColor(R.color.text_dark))
-                }
-            }
-        }
     }
 }
