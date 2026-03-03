@@ -108,24 +108,7 @@
             </tbody>
         </table>
     </div>
-    <div class="pagination" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-        <div style="font-size:13px;color:#4d6b8f;">
-            Showing {{ $clients->firstItem() ?? 0 }} to {{ $clients->lastItem() ?? 0 }} of {{ $clients->total() }} results
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-            @if ($clients->onFirstPage())
-                <span class="btn btn-muted" style="opacity:.6;cursor:not-allowed;">Previous</span>
-            @else
-                <a class="btn btn-muted" href="{{ $clients->previousPageUrl() }}" style="text-decoration:none;">Previous</a>
-            @endif
-
-            <span style="font-size:13px;color:#4d6b8f;">Page {{ $clients->currentPage() }} / {{ $clients->lastPage() }}</span>
-
-            @if ($clients->hasMorePages())
-                <a class="btn btn-muted" href="{{ $clients->nextPageUrl() }}" style="text-decoration:none;">Next</a>
-            @else
-                <span class="btn btn-muted" style="opacity:.6;cursor:not-allowed;">Next</span>
-            @endif
-        </div>
+    <div class="pagination">
+        {{ $clients->links() }}
     </div>
 @endsection

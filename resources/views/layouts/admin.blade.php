@@ -169,7 +169,58 @@
         .badge-warn { background: #fff4d6; color: #8a5b00; border: 1px solid #f2d38b; }
         .badge-success { background: #dcfce7; color: #166534; border: 1px solid #a7f3d0; }
         .badge-muted { background: #e5e7eb; color: #374151; border: 1px solid #d1d5db; }
-        .pagination { margin-top: 10px; }
+        /* Pagination Premium Styling */
+        .pagination { margin-top: 20px; }
+        .pagination nav { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+        .pagination nav > div:first-child { order: 2; margin-top: 4px; }
+        .pagination nav > div:last-child { order: 1; display: flex; gap: 6px; align-items: center; }
+        .pagination p { font-size: 12px; color: var(--muted); margin: 0; font-style: italic; }
+        .pagination a, .pagination span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 14px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid #d5e6fb;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .pagination a:hover {
+            background: var(--bg);
+            border-color: var(--sidebar);
+            color: var(--sidebar);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        .pagination .active, 
+        .pagination [aria-current="page"] span,
+        .pagination [aria-current="page"] {
+            background: var(--sidebar) !important;
+            color: #fff !important;
+            border-color: var(--sidebar) !important;
+            font-weight: 600;
+        }
+        .pagination .disabled,
+        .pagination [aria-disabled="true"] span,
+        .pagination [aria-disabled="true"] {
+            opacity: 0.5;
+            background: #f8fafc;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        /* Mobile adjustment */
+        @media (max-width: 600px) {
+            .pagination nav > div:last-child { flex-wrap: wrap; }
+        }
         .footer {
             color: var(--muted);
             font-size: 12px;
