@@ -4,11 +4,16 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tier;
+use App\Services\ClientTierRemapService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TierController extends Controller
 {
+    public function __construct(private readonly ClientTierRemapService $clientTierRemapService)
+    {
+    }
+
     public function index(): JsonResponse
     {
         return response()->json([
@@ -27,10 +32,12 @@ class TierController extends Controller
         ]);
 
         $tier = Tier::create($data);
+        $result = $this->clientTierRemapService->remapAllClients();
 
         return response()->json([
             'message' => 'Tier berhasil dibuat.',
             'tier' => $tier,
+            'remap' => $result,
         ], 201);
     }
 
@@ -52,10 +59,12 @@ class TierController extends Controller
         ]);
 
         $tier->update($data);
+        $result = $this->clientTierRemapService->remapAllClients();
 
         return response()->json([
             'message' => 'Tier berhasil diupdate.',
             'tier' => $tier,
+            'remap' => $result,
         ]);
     }
 

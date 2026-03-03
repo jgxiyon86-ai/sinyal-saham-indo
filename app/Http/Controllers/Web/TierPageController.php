@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tier;
+use App\Services\ClientTierRemapService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TierPageController extends Controller
 {
+    public function __construct(private readonly ClientTierRemapService $clientTierRemapService)
+    {
+    }
+
     public function index(): View
     {
         return view('admin.tiers', [
@@ -35,15 +40,23 @@ class TierPageController extends Controller
     {
         $data = $this->validatedData($request);
         Tier::create($data);
+        $result = $this->clientTierRemapService->remapAllClients();
 
-        return redirect()->route('tiers.page')->with('status', 'Tier berhasil ditambahkan.');
+        return redirect()->route('tiers.page')->with(
+            'status',
+            "Tier berhasil ditambahkan. Remap klient: {$result['changed']} berubah, {$result['no_tier']} tanpa tier."
+        );
     }
 
     public function update(Request $request, Tier $tier): RedirectResponse
     {
         $tier->update($this->validatedData($request));
+        $result = $this->clientTierRemapService->remapAllClients();
 
-        return redirect()->route('tiers.page')->with('status', 'Tier berhasil diupdate.');
+        return redirect()->route('tiers.page')->with(
+            'status',
+            "Tier berhasil diupdate. Remap klient: {$result['changed']} berubah, {$result['no_tier']} tanpa tier."
+        );
     }
 
     public function destroy(Tier $tier): RedirectResponse
