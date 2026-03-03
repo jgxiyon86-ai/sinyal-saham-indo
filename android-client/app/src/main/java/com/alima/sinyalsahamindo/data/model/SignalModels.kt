@@ -1,5 +1,8 @@
 package com.alima.sinyalsahamindo.data.model
 
+import com.google.gson.JsonElement
+import com.google.gson.Gson
+
 data class SignalResponse(
     val signals: List<SignalItem> = emptyList()
 )

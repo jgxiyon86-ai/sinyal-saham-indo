@@ -4,28 +4,9 @@ import com.google.gson.JsonElement
 import com.google.gson.Gson
 
 data class SignalResponse(
-    val signals: JsonElement? = null
+    val signals: List<SignalItem> = emptyList()
 ) {
-    fun getSignalList(): List<SignalItem> {
-        val element = signals ?: return emptyList()
-        val gson = Gson()
-        return try {
-            if (element.isJsonArray) {
-                element.asJsonArray.map { gson.fromJson(it, SignalItem::class.java) }
-            } else if (element.isJsonObject) {
-                val data = element.asJsonObject.get("data")
-                if (data != null && data.isJsonArray) {
-                    data.asJsonArray.map { gson.fromJson(it, SignalItem::class.java) }
-                } else {
-                    emptyList()
-                }
-            } else {
-                emptyList()
-            }
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
+    fun getSignalList(): List<SignalItem> = signals
 }
 
 data class SignalItem(
