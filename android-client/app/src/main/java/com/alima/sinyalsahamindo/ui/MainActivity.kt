@@ -25,6 +25,10 @@ import com.google.firebase.FirebaseApp
 import androidx.work.WorkManager
 import androidx.work.Configuration
 import android.util.Log
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -106,6 +110,9 @@ class MainActivity : AppCompatActivity() {
                     published_at = System.currentTimeMillis().toString()
                 )
             )
+        }
+        binding.btnChangePassword.setOnClickListener {
+            showChangePasswordDialog()
         }
         binding.btnLogout.setOnClickListener {
             lifecycleScope.launch {
@@ -199,6 +206,58 @@ class MainActivity : AppCompatActivity() {
         }
         startActivity(intent)
         finish()
+    }
+
+    private fun showChangePasswordDialog() {
+        val context = this
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
+        }
+
+        val oldPass = EditText(context).apply { hint = "Password Lama"; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD }
+        val newPass = EditText(context).apply { hint = "Password Baru"; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD }
+        val confirmPass = EditText(context).apply { hint = "Konfirmasi Password Baru"; inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD }
+
+        layout.addView(oldPass)
+        layout.addView(newPass)
+        layout.addView(confirmPass)
+
+        AlertDialog.Builder(context)
+            .setTitle("Ubah Password")
+            .setView(layout)
+            .setPositiveButton("Simpan") { _, _ ->
+                val old = oldPass.text.toString()
+                val new = newPass.text.toString()
+                val conf = confirmPass.text.toString()
+
+                if (old.isBlank() || new.isBlank() || conf.isBlank()) {
+                    Toast.makeText(context, "Semua field harus diisi", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                if (new != conf) {
+                    Toast.makeText(context, "Konfirmasi password tidak cocok", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                lifecycleScope.launch {
+                    try {
+                        val token = sessionManager.getToken() ?: return@launch
+                        val response = RetrofitProvider.api.changePassword("Bearer $token", old, new, conf)
+                        if (response.isSuccessful) {
+                            Toast.makeText(context, "Password berhasil diubah", Toast.LENGTH_LONG).show()
+                        } else {
+                            val errorMsg = response.errorBody()?.string() ?: "Gagal mengubah password"
+                            Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_LONG).show()
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Terjadi kesalahan: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
 
     private fun handleSignalIntent(intent: Intent?) {

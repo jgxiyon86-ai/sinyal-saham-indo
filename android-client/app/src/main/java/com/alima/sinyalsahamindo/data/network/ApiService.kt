@@ -27,4 +27,13 @@ interface ApiService {
         @Header("Authorization") bearerToken: String,
         @Field("fcm_token") fcmToken: String
     ): Response<Map<String, Any>>
+
+    @FormUrlEncoded
+    @POST("auth/change-password")
+    suspend fun changePassword(
+        @Header("Authorization") bearerToken: String,
+        @Field("old_password") oldPass: String,
+        @Field("new_password") newPass: String,
+        @Field("new_password_confirmation") confirmPass: String
+    ): Response<Map<String, Any>>
 }
