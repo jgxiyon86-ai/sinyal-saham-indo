@@ -61,7 +61,9 @@ class ClientPageController extends Controller
         }
 
         if ($request->filled('birth_date')) {
-            $query->whereDate('birth_date', $request->string('birth_date'));
+            $date = Carbon::parse($request->string('birth_date'));
+            $query->whereMonth('birth_date', $date->month)
+                  ->whereDay('birth_date', $date->day);
         }
 
         return view('admin.clients', [
