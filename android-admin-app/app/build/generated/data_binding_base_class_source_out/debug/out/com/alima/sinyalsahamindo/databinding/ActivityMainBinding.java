@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -48,6 +49,9 @@ public final class ActivityMainBinding implements ViewBinding {
 
   @NonNull
   public final Button btnSubmitCreate;
+
+  @NonNull
+  public final CheckBox cbGroupMessages;
 
   @NonNull
   public final FrameLayout container;
@@ -113,15 +117,15 @@ public final class ActivityMainBinding implements ViewBinding {
       @NonNull BottomAppBar bottomBarLayout, @NonNull BottomNavigationView bottomNavigation,
       @NonNull Button btnFinalBlast, @NonNull ImageButton btnLogout,
       @NonNull ImageButton btnProfile, @NonNull Button btnSubmitCreate,
-      @NonNull FrameLayout container, @NonNull EditText etEntry, @NonNull EditText etExpiresAt,
-      @NonNull EditText etPublishedAt, @NonNull EditText etSl, @NonNull EditText etStockCode,
-      @NonNull EditText etTitle, @NonNull EditText etTp, @NonNull FloatingActionButton fabAdd,
-      @NonNull LinearLayout header, @NonNull LinearLayout layoutBlast,
-      @NonNull NestedScrollView layoutCreate, @NonNull SwipeRefreshLayout layoutHistory,
-      @NonNull RecyclerView rvSignals, @NonNull RecyclerView rvWaHistory,
-      @NonNull Spinner spSignalType, @NonNull Spinner spTierTarget,
-      @NonNull TextView tvBlastWarning, @NonNull TextView tvSelectCount,
-      @NonNull TextView tvStatus) {
+      @NonNull CheckBox cbGroupMessages, @NonNull FrameLayout container, @NonNull EditText etEntry,
+      @NonNull EditText etExpiresAt, @NonNull EditText etPublishedAt, @NonNull EditText etSl,
+      @NonNull EditText etStockCode, @NonNull EditText etTitle, @NonNull EditText etTp,
+      @NonNull FloatingActionButton fabAdd, @NonNull LinearLayout header,
+      @NonNull LinearLayout layoutBlast, @NonNull NestedScrollView layoutCreate,
+      @NonNull SwipeRefreshLayout layoutHistory, @NonNull RecyclerView rvSignals,
+      @NonNull RecyclerView rvWaHistory, @NonNull Spinner spSignalType,
+      @NonNull Spinner spTierTarget, @NonNull TextView tvBlastWarning,
+      @NonNull TextView tvSelectCount, @NonNull TextView tvStatus) {
     this.rootView = rootView;
     this.bottomBarLayout = bottomBarLayout;
     this.bottomNavigation = bottomNavigation;
@@ -129,6 +133,7 @@ public final class ActivityMainBinding implements ViewBinding {
     this.btnLogout = btnLogout;
     this.btnProfile = btnProfile;
     this.btnSubmitCreate = btnSubmitCreate;
+    this.cbGroupMessages = cbGroupMessages;
     this.container = container;
     this.etEntry = etEntry;
     this.etExpiresAt = etExpiresAt;
@@ -211,6 +216,12 @@ public final class ActivityMainBinding implements ViewBinding {
       id = R.id.btnSubmitCreate;
       Button btnSubmitCreate = ViewBindings.findChildViewById(rootView, id);
       if (btnSubmitCreate == null) {
+        break missingId;
+      }
+
+      id = R.id.cbGroupMessages;
+      CheckBox cbGroupMessages = ViewBindings.findChildViewById(rootView, id);
+      if (cbGroupMessages == null) {
         break missingId;
       }
 
@@ -335,10 +346,10 @@ public final class ActivityMainBinding implements ViewBinding {
       }
 
       return new ActivityMainBinding((RelativeLayout) rootView, bottomBarLayout, bottomNavigation,
-          btnFinalBlast, btnLogout, btnProfile, btnSubmitCreate, container, etEntry, etExpiresAt,
-          etPublishedAt, etSl, etStockCode, etTitle, etTp, fabAdd, header, layoutBlast,
-          layoutCreate, layoutHistory, rvSignals, rvWaHistory, spSignalType, spTierTarget,
-          tvBlastWarning, tvSelectCount, tvStatus);
+          btnFinalBlast, btnLogout, btnProfile, btnSubmitCreate, cbGroupMessages, container,
+          etEntry, etExpiresAt, etPublishedAt, etSl, etStockCode, etTitle, etTp, fabAdd, header,
+          layoutBlast, layoutCreate, layoutHistory, rvSignals, rvWaHistory, spSignalType,
+          spTierTarget, tvBlastWarning, tvSelectCount, tvStatus);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

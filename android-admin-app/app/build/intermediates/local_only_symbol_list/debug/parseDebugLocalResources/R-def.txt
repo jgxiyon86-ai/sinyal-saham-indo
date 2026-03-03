@@ -8,6 +8,7 @@ color slate_100
 color slate_200
 color slate_400
 color slate_50
+color slate_600
 color slate_800
 color teal_100
 color teal_50
@@ -38,6 +39,7 @@ id btnProfile
 id btnSubmitChangePassword
 id btnSubmitCreate
 id bubble
+id cbGroupMessages
 id cbSelect
 id container
 id etEmail

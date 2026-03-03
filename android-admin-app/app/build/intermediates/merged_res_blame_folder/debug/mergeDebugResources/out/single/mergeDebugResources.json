@@ -1,11 +1,11 @@
 [
     {
-        "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\drawable_bg_login_stock_modal.xml.flat",
-        "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\drawable\\bg_login_stock_modal.xml"
-    },
-    {
         "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\drawable_bg_signal_buy.xml.flat",
         "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\drawable\\bg_signal_buy.xml"
+    },
+    {
+        "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\drawable_bg_login_stock_modal.xml.flat",
+        "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\drawable\\bg_login_stock_modal.xml"
     },
     {
         "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\layout_item_signal_chat.xml.flat",
@@ -20,20 +20,16 @@
         "source": "com.alima.sinyalsahamindo.app-main-51:/layout/activity_main.xml"
     },
     {
-        "merged": "com.alima.sinyalsahamindo.app-debug-49:/layout_item_signal_admin.xml.flat",
-        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/item_signal_admin.xml"
-    },
-    {
         "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\layout_dialog_profile.xml.flat",
         "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\layout\\dialog_profile.xml"
     },
     {
-        "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\drawable_bg_signal_sell.xml.flat",
-        "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\drawable\\bg_signal_sell.xml"
+        "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\layout_item_wa_history.xml.flat",
+        "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\layout\\item_wa_history.xml"
     },
     {
-        "merged": "com.alima.sinyalsahamindo.app-debug-49:/drawable_bg_button_white.xml.flat",
-        "source": "com.alima.sinyalsahamindo.app-main-51:/drawable/bg_button_white.xml"
+        "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\drawable_bg_signal_sell.xml.flat",
+        "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\drawable\\bg_signal_sell.xml"
     },
     {
         "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\drawable_bg_input_soft.xml.flat",
@@ -72,10 +68,6 @@
         "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\menu\\bottom_nav_menu.xml"
     },
     {
-        "merged": "com.alima.sinyalsahamindo.app-debug-49:/layout_item_wa_history.xml.flat",
-        "source": "com.alima.sinyalsahamindo.app-main-51:/layout/item_wa_history.xml"
-    },
-    {
         "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\layout_activity_splash.xml.flat",
         "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\layout\\activity_splash.xml"
     },
@@ -86,5 +78,9 @@
     {
         "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\layout_dialog_create_signal.xml.flat",
         "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\layout\\dialog_create_signal.xml"
+    },
+    {
+        "merged": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-debug-49:\\drawable_bg_button_white.xml.flat",
+        "source": "C:\\Users\\EOA\\.gradle\\daemon\\9.0.0\\com.alima.sinyalsahamindo.app-main-51:\\drawable\\bg_button_white.xml"
     }
 ]

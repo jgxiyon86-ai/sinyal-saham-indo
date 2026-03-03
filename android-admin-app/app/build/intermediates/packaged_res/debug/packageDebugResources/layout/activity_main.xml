@@ -178,6 +178,17 @@
                     <TextView android:id="@+id/tvSelectCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 Sinyal Terpilih" android:textColor="@color/teal_600" android:textSize="14sp" android:layout_marginTop="8dp" android:layout_marginBottom="16dp"/>
                     
                     <Button android:id="@+id/btnFinalBlast" android:layout_width="match_parent" android:layout_height="56dp" android:text="KIRIM BLAST SEKARANG" android:backgroundTint="@color/teal_600" app:cornerRadius="16dp" android:textStyle="bold"/>
+                    
+                    <CheckBox 
+                        android:id="@+id/cbGroupMessages"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Gabung sinyal jadi 1 pesan"
+                        android:textSize="12sp"
+                        android:layout_marginTop="8dp"
+                        android:checked="true"
+                        android:textColor="@color/slate_600"/>
+
                     <TextView android:id="@+id/tvBlastWarning" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pilih sinyal dulu di tab Aktif" android:textColor="@color/red_sell" android:textSize="11sp" android:layout_marginTop="12dp" android:visibility="gone"/>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

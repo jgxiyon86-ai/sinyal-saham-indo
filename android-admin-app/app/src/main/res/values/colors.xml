@@ -16,6 +16,7 @@
     <color name="slate_100">#F1F5F9</color>
     <color name="slate_200">#E2E8F0</color>
     <color name="slate_400">#94A3B8</color>
+    <color name="slate_600">#475569</color>
     <color name="slate_800">#1E293B</color>
     <color name="orange_500">#F97316</color>
 </resources>
