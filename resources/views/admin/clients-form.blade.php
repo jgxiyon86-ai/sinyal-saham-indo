@@ -15,6 +15,7 @@
             @csrf
             @if ($client) @method('PUT') @endif
             <div class="field-grid">
+                <div><label>IDCUST</label><input name="client_code" value="{{ old('client_code', $client->client_code ?? '') }}" placeholder="contoh: IDCUST001"></div>
                 <div><label>Nama</label><input name="name" value="{{ old('name', $client->name ?? '') }}" required></div>
                 <div><label>Email</label><input type="email" name="email" value="{{ old('email', $client->email ?? '') }}" required></div>
                 <div><label>Password {{ $client ? '(opsional)' : '' }}</label><input type="password" name="password" {{ $client ? '' : 'required' }}></div>

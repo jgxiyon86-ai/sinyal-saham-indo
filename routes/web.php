@@ -30,6 +30,7 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::put('/clients/{client}', [ClientPageController::class, 'update'])->name('clients.update');
     Route::post('/clients/{client}/send-credentials', [ClientPageController::class, 'sendCredentials'])->name('clients.send-credentials');
     Route::delete('/clients/{client}', [ClientPageController::class, 'destroy'])->name('clients.destroy');
+    Route::post('/clients/import', [ClientPageController::class, 'import'])->name('clients.import');
 
     Route::get('/tiers', [TierPageController::class, 'index'])->name('tiers.page');
     Route::get('/tiers/create', [TierPageController::class, 'create'])->name('tiers.create');

@@ -9,7 +9,7 @@
     <div class="panel">
         <form method="GET" action="{{ route('clients.page') }}">
             <div class="field-grid">
-                <div><label>Cari</label><input name="q" value="{{ request('q') }}" placeholder="Nama, email, no HP"></div>
+                <div><label>Cari</label><input name="q" value="{{ request('q') }}" placeholder="IDCUST, nama, email, no HP"></div>
                 <div>
                     <label>Tier</label>
                     <select name="tier_id">
@@ -45,16 +45,34 @@
         </form>
     </div>
 
+    <div class="panel" style="margin-top:12px;">
+        <form method="POST" action="{{ route('clients.import') }}" enctype="multipart/form-data">
+            @csrf
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:end;">
+                <div style="min-width:300px;flex:1;">
+                    <label>Import Klient (XLSX/CSV)</label>
+                    <input type="file" name="client_import_file" accept=".xlsx,.csv,.txt" required>
+                </div>
+                <button class="btn" type="submit">Import 3000 Klient</button>
+            </div>
+            <div style="margin-top:8px;color:#4d6b8f;">
+                Format kolom wajib: <strong>IDCUST | Full nama klient | HP | Birthdate | saldo</strong>.
+                <br>Import akan update data lama jika <strong>IDCUST</strong> atau <strong>HP</strong> sudah ada.
+            </div>
+        </form>
+    </div>
+
     <div class="table-wrap">
         <table>
             <thead>
             <tr>
-                <th>Nama</th><th>Email</th><th>Tier</th><th>Modal</th><th>Agama</th><th>Nomor HP</th><th>Status</th><th>Aksi</th>
+                <th>IDCUST</th><th>Nama</th><th>Email</th><th>Tier</th><th>Modal</th><th>Agama</th><th>Nomor HP</th><th>Status</th><th>Aksi</th>
             </tr>
             </thead>
             <tbody>
             @forelse($clients as $client)
                 <tr>
+                    <td>{{ $client->client_code ?: '-' }}</td>
                     <td>{{ $client->name }}</td>
                     <td>{{ $client->email }}</td>
                     <td>{{ $client->tier->name ?? '-' }}</td>
@@ -78,7 +96,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="8">Belum ada data klient.</td></tr>
+                <tr><td colspan="9">Belum ada data klient.</td></tr>
             @endforelse
             </tbody>
         </table>
