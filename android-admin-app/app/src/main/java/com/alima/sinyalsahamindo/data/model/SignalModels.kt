@@ -63,7 +63,8 @@ data class AdminCreateSignalResponse(
 
 data class SignalWaBlastRequest(
     val signal_ids: List<Int>,
-    val tier_id: Int?
+    val tier_id: Int?,
+    val group_messages: Boolean = false
 )
 
 data class WaBlastHistoryResponse(

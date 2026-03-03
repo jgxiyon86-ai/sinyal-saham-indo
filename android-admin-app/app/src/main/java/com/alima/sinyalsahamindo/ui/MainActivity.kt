@@ -95,7 +95,10 @@ class MainActivity : AppCompatActivity() {
             updateBlastSummary()
             loadWaBlastHistory()
         }
-        if (tag == "create") clearForm()
+        if (tag == "create") {
+            clearForm()
+            loadTiers() // REFRESH TIERS when entering create form
+        }
     }
 
     private fun showDateTimePicker(editText: EditText) {
@@ -213,7 +216,12 @@ class MainActivity : AppCompatActivity() {
         binding.btnFinalBlast.isEnabled = false
         lifecycleScope.launch {
             try {
-                val req = SignalWaBlastRequest(signal_ids = selectedBlastIds.toList(), tier_id = null)
+                val isGrouped = binding.cbGroupMessages.isChecked
+                val req = SignalWaBlastRequest(
+                    signal_ids = selectedBlastIds.toList(), 
+                    tier_id = null,
+                    group_messages = isGrouped
+                )
                 val response = RetrofitProvider.api.sendSignalWaBlast("Bearer $token", req)
                 if (response.isSuccessful) {
                     showInfo("WA Blast Masuk Antrian.")
@@ -262,8 +270,12 @@ class MainActivity : AppCompatActivity() {
                     labels.addAll(tiers.map { it.name })
                     val adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, labels)
                     binding.spTierTarget.adapter = adapter
+                } else {
+                    showError("Gagal memuat daftar tier.")
                 }
-            } catch (e: Exception) { }
+            } catch (e: Exception) { 
+                showError("Gagal koneksi tier: ${e.message}")
+            }
         }
     }
 

@@ -35,6 +35,7 @@ class SignalWaBlastController extends Controller
             'signal_ids' => ['required', 'array', 'min:1'],
             'signal_ids.*' => ['required', 'integer', 'exists:signals,id'],
             'tier_id' => ['nullable', 'integer', 'exists:tiers,id'],
+            'group_messages' => ['nullable', 'boolean'],
         ]);
 
         if (GatewaySetting::appApiKey() === '') {
@@ -73,7 +74,7 @@ class SignalWaBlastController extends Controller
 
         $clients = $this->applyTierBlastLimit($clients)->take($maxRecipients)->values();
 
-        $groupByClient = GatewaySetting::signalWaGroupMessages();
+        $groupByClient = (bool) ($data['group_messages'] ?? GatewaySetting::signalWaGroupMessages());
         $jobs = [];
         foreach ($clients as $client) {
             $matched = $signals->filter(fn (Signal $signal) => $signal->tiers->contains('id', $client->tier_id))->values();
@@ -148,6 +149,7 @@ class SignalWaBlastController extends Controller
                     'max_recipients' => $maxRecipients,
                     'opening_text' => $opening,
                     'closing_text' => $closing,
+                    'group_messages' => $groupByClient,
                     'status' => 'queued',
                     'total_targets' => count($jobs),
                     'pending_count' => count($jobs),
@@ -184,6 +186,7 @@ class SignalWaBlastController extends Controller
                         'tier_id' => $data['tier_id'] ?? null,
                         'delay_seconds' => $delaySeconds,
                         'max_recipients' => $maxRecipients,
+                        'group_messages' => $groupByClient,
                         'queue_batch_id' => $batch->id,
                     ],
                     'recipients_count' => $clients->count(),
