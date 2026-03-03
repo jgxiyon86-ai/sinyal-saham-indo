@@ -61,6 +61,7 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::get('/wa-blast-sinyal', [SignalWaBlastPageController::class, 'index'])->name('signal-wa-blast.page');
     Route::get('/wa-blast-sinyal/preview', fn () => redirect()->route('signal-wa-blast.page'));
     Route::get('/wa-blast-sinyal/send', fn () => redirect()->route('signal-wa-blast.page'));
+    Route::get('/wa-blast-sinyal/settings', fn () => redirect()->route('signal-wa-blast.page'));
     Route::any('/wa-blast-sinyal/preview-proc', [SignalWaBlastPageController::class, 'preview'])->name('signal-wa-blast.preview');
     Route::any('/wa-blast-sinyal/send-proc', [SignalWaBlastPageController::class, 'send'])->name('signal-wa-blast.send');
     Route::post('/wa-blast-sinyal/settings', [SignalWaBlastPageController::class, 'saveSettings'])->name('signal-wa-blast.settings.save');
