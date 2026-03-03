@@ -71,10 +71,11 @@
                 <div><label>Maksimal target per blast</label><input type="number" min="1" max="300" name="max_recipients" value="{{ old('max_recipients', $settings['max_recipients']) }}" required></div>
                 <div style="grid-column:1/-1;"><label>Opening</label><input name="opening_text" value="{{ old('opening_text', $settings['opening_text']) }}"></div>
                 <div style="grid-column:1/-1;"><label>Closing</label><input name="closing_text" value="{{ old('closing_text', $settings['closing_text']) }}"></div>
-                <div style="grid-column:1/-1;">
-                    <label>Image URL Fallback (opsional)</label>
-                    <input id="image-url-signal-blast" type="url" name="image_url" value="{{ old('image_url', $settings['image_url']) }}" placeholder="https://domain.com/gambar.jpg">
                     <div style="font-size:12px;color:#4d6b8f;margin-top:4px;">Default pakai gambar per-sinyal. Kolom ini hanya fallback. Bisa Ctrl+V screenshot langsung.</div>
+                </div>
+                <div style="grid-column:1/-1; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" name="group_messages" value="1" id="group_messages" @checked(old('group_messages', $settings['group_messages']))>
+                    <label for="group_messages" style="margin:0; font-weight:bold; cursor:pointer;">Gabung beberapa sinyal jadi 1 pesan WA (Rekomendasi)</label>
                 </div>
             </div>
 
@@ -111,7 +112,27 @@
 
             <div style="margin-top:10px;">
                 <button id="btn-preview-submit" class="btn" type="submit">Preview WA Blast Sinyal</button>
-                <button class="btn btn-muted" type="submit" formaction="{{ route('signal-wa-blast.settings.save') }}" formmethod="POST">Simpan Setting WA Blast</button>
+            </div>
+        </form>
+
+        <form method="POST" action="{{ route('signal-wa-blast.settings.save') }}" style="margin-top:20px; border-top:1px solid #eee; pt-20">
+            @csrf
+            <div class="field-grid" style="margin-top:15px;">
+                <div><label>Delay antar kirim (detik)</label><input type="number" min="3" max="120" name="delay_seconds" value="{{ old('delay_seconds', $settings['delay_seconds']) }}" required></div>
+                <div><label>Maksimal target per blast</label><input type="number" min="1" max="300" name="max_recipients" value="{{ old('max_recipients', $settings['max_recipients']) }}" required></div>
+                <div style="grid-column:1/-1;"><label>Opening</label><input name="opening_text" value="{{ old('opening_text', $settings['opening_text']) }}"></div>
+                <div style="grid-column:1/-1;"><label>Closing</label><input name="closing_text" value="{{ old('closing_text', $settings['closing_text']) }}"></div>
+                <div style="grid-column:1/-1;">
+                    <label>Image URL Fallback (opsional)</label>
+                    <input type="url" name="image_url" value="{{ old('image_url', $settings['image_url']) }}" placeholder="https://domain.com/gambar.jpg">
+                </div>
+                <div style="grid-column:1/-1; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" name="group_messages" value="1" id="group_messages_settings" @checked(old('group_messages', $settings['group_messages']))>
+                    <label for="group_messages_settings" style="margin:0; font-weight:bold; cursor:pointer;">Gabung beberapa sinyal jadi 1 pesan WA (Rekomendasi)</label>
+                </div>
+            </div>
+            <div style="margin-top:10px;">
+                <button class="btn btn-muted" type="submit">Simpan Setting WA Blast</button>
             </div>
         </form>
     </div>
@@ -132,6 +153,7 @@
                 <input type="hidden" name="opening_text" value="{{ $settings['opening_text'] }}">
                 <input type="hidden" name="closing_text" value="{{ $settings['closing_text'] }}">
                 <input type="hidden" name="image_url" value="{{ $settings['image_url'] }}">
+                <input type="hidden" name="group_messages" value="{{ $settings['group_messages'] ? '1' : '0' }}">
                 <button id="btn-send-submit" class="btn" type="submit" onclick="return confirm('Masukkan WA Blast Sinyal ke antrian sekarang?')">Queue WA Blast Sinyal</button>
             </form>
 

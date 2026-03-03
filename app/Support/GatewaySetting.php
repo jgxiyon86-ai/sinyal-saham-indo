@@ -117,4 +117,14 @@ class GatewaySetting
 
         return '';
     }
+
+    public static function signalWaGroupMessages(): bool
+    {
+        $value = AppSetting::getValue('signal_wa_group_messages');
+        if ($value === null) {
+            return (bool) env('SIGNAL_WA_GROUP_MESSAGES', true);
+        }
+
+        return (bool) $value;
+    }
 }

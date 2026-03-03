@@ -17,6 +17,7 @@ class SignalWaBlastBatch extends Model
         'opening_text',
         'closing_text',
         'image_url',
+        'group_messages',
         'status',
         'total_targets',
         'pending_count',
@@ -30,6 +31,7 @@ class SignalWaBlastBatch extends Model
     {
         return [
             'signal_ids' => 'array',
+            'group_messages' => 'boolean',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
         ];

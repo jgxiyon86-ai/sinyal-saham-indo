@@ -67,6 +67,7 @@ class SignalWaBlastPageController extends Controller
         } catch (Throwable $e) {
             Log::error('Signal WA blast preview error', [
                 'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             [$batchRows, $activeBatch, $targetRows] = $this->queueDashboardData();
             $settings = $this->defaultSettings();
@@ -100,13 +101,7 @@ class SignalWaBlastPageController extends Controller
             'preview' => $targets,
             'selectedSignalIds' => $payload['signal_ids'],
             'selectedTierId' => $payload['tier_id'],
-            'settings' => [
-                'delay_seconds' => $payload['delay_seconds'],
-                'max_recipients' => $payload['max_recipients'],
-                'opening_text' => $payload['opening_text'],
-                'closing_text' => $payload['closing_text'],
-                'image_url' => $payload['image_url'] ?? '',
-            ],
+            'settings' => $payload,
             'logs' => WaBlastLog::with('admin')
                 ->where('blast_type', 'general')
                 ->where(function ($query) {
@@ -153,18 +148,33 @@ class SignalWaBlastPageController extends Controller
         }
 
         $jobs = collect();
+        $groupByClient = (bool) ($payload['group_messages'] ?? GatewaySetting::signalWaGroupMessages());
+
         foreach ($targets as $target) {
-            foreach ($target['signal_items'] as $signalItem) {
+            if ($groupByClient) {
                 $jobs->push([
                     'client_name' => $target['name'],
                     'whatsapp_number' => $target['whatsapp_number'],
                     'tier_id' => $target['tier_id'],
                     'client_id' => $target['client_id'],
-                    'signal_id' => $signalItem['signal_id'],
-                    'signal_title' => $signalItem['signal_title'],
-                    'message' => $signalItem['message'],
-                    'image_url' => $signalItem['image_url'] ?: ($payload['image_url'] ?: null),
+                    'signal_id' => null,
+                    'signal_title' => $target['signals_count'] . ' Sinyal',
+                    'message' => $target['message'],
+                    'image_url' => $payload['image_url'] ?: null,
                 ]);
+            } else {
+                foreach ($target['signal_items'] as $signalItem) {
+                    $jobs->push([
+                        'client_name' => $target['name'],
+                        'whatsapp_number' => $target['whatsapp_number'],
+                        'tier_id' => $target['tier_id'],
+                        'client_id' => $target['client_id'],
+                        'signal_id' => $signalItem['signal_id'],
+                        'signal_title' => $signalItem['signal_title'],
+                        'message' => $signalItem['message'],
+                        'image_url' => $signalItem['image_url'] ?: ($payload['image_url'] ?: null),
+                    ]);
+                }
             }
         }
 
@@ -219,6 +229,7 @@ class SignalWaBlastPageController extends Controller
                         'signal_ids' => $payload['signal_ids'],
                         'delay_seconds' => $payload['delay_seconds'],
                         'max_recipients' => $payload['max_recipients'],
+                        'group_messages' => $payload['group_messages'] ?? false,
                         'queue_batch_id' => $batch->id,
                     ],
                     'recipients_count' => $targets->count(),
@@ -256,9 +267,10 @@ class SignalWaBlastPageController extends Controller
         $data = $request->validate([
             'delay_seconds' => ['nullable', 'integer', 'min:3', 'max:120'],
             'max_recipients' => ['nullable', 'integer', 'min:1', 'max:300'],
-            'opening_text' => ['nullable', 'string', 'max:300'],
-            'closing_text' => ['nullable', 'string', 'max:300'],
+            'opening_text' => ['nullable', 'string', 'max:500'],
+            'closing_text' => ['nullable', 'string', 'max:500'],
             'image_url' => ['nullable', 'url', 'max:500'],
+            'group_messages' => ['nullable', 'boolean'],
         ]);
 
         $defaults = $this->defaultSettings();
@@ -267,12 +279,14 @@ class SignalWaBlastPageController extends Controller
         $openingText = trim((string) ($data['opening_text'] ?? $defaults['opening_text']));
         $closingText = trim((string) ($data['closing_text'] ?? $defaults['closing_text']));
         $imageUrl = trim((string) ($data['image_url'] ?? $defaults['image_url']));
+        $groupMessages = (bool) ($request->has('group_messages') ? $data['group_messages'] : false);
 
         AppSetting::setValue('signal_wa_delay_seconds', (string) $delay);
         AppSetting::setValue('signal_wa_max_recipients', (string) $maxRecipients);
         AppSetting::setValue('signal_wa_opening_text', $openingText);
         AppSetting::setValue('signal_wa_closing_text', $closingText);
         AppSetting::setValue('signal_wa_image_url', $imageUrl);
+        AppSetting::setValue('signal_wa_group_messages', $groupMessages ? '1' : '0');
 
         return redirect()->route('signal-wa-blast.page')->with('status', 'Setting WA Blast Sinyal tersimpan.');
     }
@@ -373,9 +387,6 @@ class SignalWaBlastPageController extends Controller
             ->get();
     }
 
-    /**
-     * @return array{0: array, 1: \Illuminate\Support\Collection}
-     */
     private function buildPayload(Request $request): array
     {
         $data = $request->validate([
@@ -384,9 +395,10 @@ class SignalWaBlastPageController extends Controller
             'tier_id' => ['nullable', 'integer', 'exists:tiers,id'],
             'delay_seconds' => ['nullable', 'integer', 'min:3', 'max:120'],
             'max_recipients' => ['nullable', 'integer', 'min:1', 'max:300'],
-            'opening_text' => ['nullable', 'string', 'max:300'],
-            'closing_text' => ['nullable', 'string', 'max:300'],
+            'opening_text' => ['nullable', 'string', 'max:500'],
+            'closing_text' => ['nullable', 'string', 'max:500'],
             'image_url' => ['nullable', 'url', 'max:500'],
+            'group_messages' => ['nullable', 'boolean'],
         ]);
 
         $payload = [
@@ -397,6 +409,7 @@ class SignalWaBlastPageController extends Controller
             'opening_text' => trim((string) ($data['opening_text'] ?? GatewaySetting::signalWaOpeningText())),
             'closing_text' => trim((string) ($data['closing_text'] ?? GatewaySetting::signalWaClosingText())),
             'image_url' => trim((string) ($data['image_url'] ?? GatewaySetting::signalWaImageUrl())),
+            'group_messages' => (bool) ($request->has('group_messages') ? $data['group_messages'] : GatewaySetting::signalWaGroupMessages()),
         ];
 
         $signals = Signal::query()
@@ -417,7 +430,6 @@ class SignalWaBlastPageController extends Controller
 
         $clients = $clientsQuery->with('tier:id,name')->limit(1500)->get();
 
-        // Filter valid numbers in PHP
         $clients = $clients->filter(function ($client) {
             return preg_match('/^(\+62|62|0)?8[0-9]{7,13}$/', (string) $client->whatsapp_number);
         });
@@ -544,6 +556,7 @@ class SignalWaBlastPageController extends Controller
             'opening_text' => GatewaySetting::signalWaOpeningText(),
             'closing_text' => GatewaySetting::signalWaClosingText(),
             'image_url' => GatewaySetting::signalWaImageUrl(),
+            'group_messages' => GatewaySetting::signalWaGroupMessages(),
         ];
     }
 
@@ -563,4 +576,3 @@ class SignalWaBlastPageController extends Controller
         ])->save();
     }
 }
-

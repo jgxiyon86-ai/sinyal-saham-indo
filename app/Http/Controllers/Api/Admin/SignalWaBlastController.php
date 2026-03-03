@@ -73,28 +73,59 @@ class SignalWaBlastController extends Controller
 
         $clients = $this->applyTierBlastLimit($clients)->take($maxRecipients)->values();
 
+        $groupByClient = GatewaySetting::signalWaGroupMessages();
         $jobs = [];
         foreach ($clients as $client) {
             $matched = $signals->filter(fn (Signal $signal) => $signal->tiers->contains('id', $client->tier_id))->values();
-            foreach ($matched as $signal) {
-                $type = strtoupper((string) $signal->signal_type);
-                $code = strtoupper((string) $signal->stock_code);
-                $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 0, '.', ',') : '-';
-                $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 0, '.', ',') : '-';
-                $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 0, '.', ',') : '-';
-                $line = "{$code} {$type} | Entry {$entry} | TP {$tp} | SL {$sl}";
-                $message = str_replace('{name}', $client->name, $opening)."\n\n- {$line}\n\n".str_replace('{name}', $client->name, $closing);
+            if ($matched->isEmpty()) {
+                continue;
+            }
+
+            if ($groupByClient) {
+                // Grouped Message
+                $signalLines = $matched->map(function (Signal $signal) {
+                    $type = strtoupper((string) $signal->signal_type);
+                    $code = strtoupper((string) $signal->stock_code);
+                    $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 0, '.', ',') : '-';
+                    $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 0, '.', ',') : '-';
+                    $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 0, '.', ',') : '-';
+                    return "- {$code} {$type} | Entry {$entry} | TP {$tp} | SL {$sl}";
+                })->implode("\n");
+
+                $message = str_replace('{name}', $client->name, $opening)."\n\n".$signalLines."\n\n".str_replace('{name}', $client->name, $closing);
 
                 $jobs[] = [
                     'client_id' => $client->id,
                     'tier_id' => $client->tier_id,
-                    'signal_id' => $signal->id,
+                    'signal_id' => null,
                     'client_name' => $client->name,
-                    'signal_title' => $signal->title,
+                    'signal_title' => $matched->count() . ' Sinyal',
                     'whatsapp_number' => $client->whatsapp_number,
-                    'message' => $message,
-                    'image_url' => (string) ($signal->image_url ?? ''),
+                    'message' => trim($message),
+                    'image_url' => (string) ($matched->first()->image_url ?? ''),
                 ];
+            } else {
+                // Individual Messages
+                foreach ($matched as $signal) {
+                    $type = strtoupper((string) $signal->signal_type);
+                    $code = strtoupper((string) $signal->stock_code);
+                    $entry = $signal->entry_price !== null ? number_format((float) $signal->entry_price, 0, '.', ',') : '-';
+                    $tp = $signal->take_profit !== null ? number_format((float) $signal->take_profit, 0, '.', ',') : '-';
+                    $sl = $signal->stop_loss !== null ? number_format((float) $signal->stop_loss, 0, '.', ',') : '-';
+                    $line = "{$code} {$type} | Entry {$entry} | TP {$tp} | SL {$sl}";
+                    $message = str_replace('{name}', $client->name, $opening)."\n\n- {$line}\n\n".str_replace('{name}', $client->name, $closing);
+
+                    $jobs[] = [
+                        'client_id' => $client->id,
+                        'tier_id' => $client->tier_id,
+                        'signal_id' => $signal->id,
+                        'client_name' => $client->name,
+                        'signal_title' => $signal->title,
+                        'whatsapp_number' => $client->whatsapp_number,
+                        'message' => trim($message),
+                        'image_url' => (string) ($signal->image_url ?? ''),
+                    ];
+                }
             }
         }
 
