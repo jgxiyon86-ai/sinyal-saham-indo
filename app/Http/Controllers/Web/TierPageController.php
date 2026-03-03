@@ -59,6 +59,16 @@ class TierPageController extends Controller
         );
     }
 
+    public function syncAll(): RedirectResponse
+    {
+        $result = $this->clientTierRemapService->remapAllClients();
+
+        return redirect()->route('tiers.page')->with(
+            'status',
+            "Sinkronisasi selesai. {$result['changed']} klient tiernya berubah, {$result['no_tier']} klient tanpa tier (modal di bawah batas)."
+        );
+    }
+
     public function destroy(Tier $tier): RedirectResponse
     {
         if ($tier->clients()->exists()) {

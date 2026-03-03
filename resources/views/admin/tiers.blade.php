@@ -6,8 +6,12 @@
     <h2 style="margin:0 0 4px;">Tier Modal</h2>
     <p style="margin:0 0 14px;color:#4d6b8f;">List tier terpisah dari form.</p>
 
-    <div style="margin-bottom:10px;">
+    <div style="margin-bottom:10px; display: flex; gap: 8px;">
         <a class="btn" href="{{ route('tiers.create') }}" style="text-decoration:none;">Tambah Tier</a>
+        <form action="{{ route('tiers.sync-all') }}" method="POST" onsubmit="return confirm('Proses ini akan mengupdate tier SEMUA klient berdasarkan modal mereka saat ini. Lanjutkan?')">
+            @csrf
+            <button class="btn btn-muted" type="submit">Sinkronkan Semua Tier Klient</button>
+        </form>
     </div>
 
     <div class="table-wrap">

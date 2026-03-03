@@ -70,8 +70,7 @@ class ClientTierRemapService
             }
         }
 
-        $highest = $tiers->sortByDesc('min_capital')->first();
-        return $highest ? (int) $highest->id : null;
+        return null;
     }
 }
 

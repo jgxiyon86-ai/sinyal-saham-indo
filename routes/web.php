@@ -37,6 +37,7 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::get('/tiers/{tier}/edit', [TierPageController::class, 'edit'])->name('tiers.edit');
     Route::post('/tiers', [TierPageController::class, 'store'])->name('tiers.store');
     Route::put('/tiers/{tier}', [TierPageController::class, 'update'])->name('tiers.update');
+    Route::post('/tiers/sync-all', [TierPageController::class, 'syncAll'])->name('tiers.sync-all');
     Route::delete('/tiers/{tier}', [TierPageController::class, 'destroy'])->name('tiers.destroy');
 
     Route::get('/signals', [SignalPageController::class, 'index'])->name('signals.page');
