@@ -28,3 +28,11 @@ android-client/*.iml
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Android Admin
+android-admin-app/.gradle/
+android-admin-app/.idea/
+android-admin-app/build/
+android-admin-app/app/build/
+android-admin-app/local.properties
+android-admin-app/*.iml
