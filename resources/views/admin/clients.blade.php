@@ -73,47 +73,85 @@
                 <th>IDCUST</th><th>Nama</th><th>Email</th><th>Tier</th><th>Modal</th><th>Agama</th><th>Tgl Lahir</th><th>Nomor HP</th><th>Status</th><th>Aksi</th>
             </tr>
             </thead>
-            <tbody>
-            @forelse($clients as $client)
-                <tr>
-                    <td>{{ $client->client_code ?: '-' }}</td>
-                    <td>{{ $client->name }}</td>
-                    <td>{{ $client->email }}</td>
-                    <td>{{ $client->tier->name ?? '-' }}</td>
-                    <td>{{ number_format((float)$client->capital_amount, 0, ',', '.') }}</td>
-                    <td>{{ $religions[$client->religion] ?? '-' }}</td>
-                    <td>{{ $client->birth_date ? \Illuminate\Support\Carbon::parse($client->birth_date)->format('d-m-Y') : '-' }}</td>
-                    <td>{{ $client->whatsapp_number ?? '-' }}</td>
-                    <td>{{ $client->is_active ? 'Aktif' : 'Nonaktif' }}</td>
-                    <td>
-                        <div class="actions">
-                            <a class="btn btn-muted" href="{{ route('clients.edit', $client) }}" style="text-decoration:none;">Edit</a>
-                            <form method="POST" action="{{ route('clients.toggle-active', $client) }}" onsubmit="return confirm('{{ $client->is_active ? 'Nonaktifkan klient ini? Klient tidak akan menerima WA/sinyal aplikasi.' : 'Aktifkan kembali klient ini?' }}')">
-                                @csrf
-                                <input type="hidden" name="is_active" value="{{ $client->is_active ? 0 : 1 }}">
-                                <button class="btn {{ $client->is_active ? 'btn-danger' : '' }}" type="submit">
-                                    {{ $client->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                </button>
-                            </form>
-                            <form method="POST" action="{{ route('clients.send-credentials', $client) }}" onsubmit="return confirm('Kirim password baru ke email klient ini?')">
-                                @csrf
-                                <button class="btn" type="submit">Kirim Kredensial</button>
-                            </form>
-                            <form method="POST" action="{{ route('clients.destroy', $client) }}" onsubmit="return confirm('Hapus klient ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger" type="submit">Hapus</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="9">Belum ada data klient.</td></tr>
-            @endforelse
+            <tbody id="client-table-body">
+                @include('admin.clients-table-partial')
             </tbody>
         </table>
     </div>
-    <div class="pagination">
-        {{ $clients->links() }}
+    <div id="pagination-wrapper" class="pagination">
+        {{-- Pagination is now included in the partial for consistency, but we keep the wrapper if needed --}}
     </div>
+
+    @push('scripts')
+    <script>
+    (function () {
+        const tableBody = document.getElementById('client-table-body');
+        const searchInputs = document.querySelectorAll('.panel form input, .panel form select');
+        const filterForm = document.querySelector('.panel form');
+        let searchTimeout = null;
+
+        function fetchClients(url = null) {
+            const formData = new FormData(filterForm);
+            const params = new URLSearchParams(formData);
+            const fetchUrl = url || `{{ route('clients.page') }}?${params.toString()}`;
+
+            tableBody.style.opacity = '0.5';
+
+            fetch(fetchUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.text())
+            .then(html => {
+                tableBody.innerHTML = html;
+                tableBody.style.opacity = '1';
+                
+                // Re-bind pagination links
+                const paginationLinks = tableBody.querySelectorAll('.pagination a');
+                paginationLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        fetchClients(this.href);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                });
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                tableBody.style.opacity = '1';
+            });
+        }
+
+        searchInputs.forEach(input => {
+            const eventType = input.tagName === 'SELECT' || input.type === 'date' ? 'change' : 'keyup';
+            input.addEventListener(eventType, () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    fetchClients();
+                }, 400); // 400ms debounce
+            });
+        });
+
+        // Intercept manual filter button
+        filterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchClients();
+        });
+
+        // Handle initial pagination links if any exist outside
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.pagination a')) {
+                const link = e.target.closest('.pagination a');
+                if (link.closest('#client-table-body')) {
+                    // already handled above, but just in case
+                } else {
+                    e.preventDefault();
+                    fetchClients(link.href);
+                }
+            }
+        });
+    })();
+    </script>
+    @endpush
 @endsection

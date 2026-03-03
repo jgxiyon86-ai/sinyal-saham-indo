@@ -67,6 +67,13 @@ class ClientPageController extends Controller
                   ->whereDay('birth_date', $date->day);
         }
 
+        if ($request->ajax()) {
+            return view('admin.clients-table-partial', [
+                'clients' => $query->paginate(25)->withQueryString(),
+                'religions' => config('religions.options', []),
+            ]);
+        }
+
         return view('admin.clients', [
             'clients' => $query->paginate(25)->withQueryString(),
             'tiers' => Tier::query()->orderBy('min_capital')->get(),
