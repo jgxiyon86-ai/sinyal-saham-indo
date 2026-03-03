@@ -60,6 +60,10 @@ class ClientPageController extends Controller
             $query->where('is_active', (bool) $request->integer('is_active'));
         }
 
+        if ($request->filled('birth_date')) {
+            $query->whereDate('birth_date', $request->string('birth_date'));
+        }
+
         return view('admin.clients', [
             'clients' => $query->paginate(25)->withQueryString(),
             'tiers' => Tier::query()->orderBy('min_capital')->get(),

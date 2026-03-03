@@ -53,6 +53,10 @@
                         <option value="0" @selected(request('is_active') === '0')>Nonaktif</option>
                     </select>
                 </div>
+                <div>
+                    <label>Tgl Lahir</label>
+                    <input type="date" name="birth_date" value="{{ request('birth_date') }}">
+                </div>
             </div>
             <div style="margin-top:10px;display:flex;gap:8px;">
                 <button class="btn" type="submit">Filter</button>
@@ -66,7 +70,7 @@
         <table>
             <thead>
             <tr>
-                <th>IDCUST</th><th>Nama</th><th>Email</th><th>Tier</th><th>Modal</th><th>Agama</th><th>Nomor HP</th><th>Status</th><th>Aksi</th>
+                <th>IDCUST</th><th>Nama</th><th>Email</th><th>Tier</th><th>Modal</th><th>Agama</th><th>Tgl Lahir</th><th>Nomor HP</th><th>Status</th><th>Aksi</th>
             </tr>
             </thead>
             <tbody>
@@ -78,6 +82,7 @@
                     <td>{{ $client->tier->name ?? '-' }}</td>
                     <td>{{ number_format((float)$client->capital_amount, 0, ',', '.') }}</td>
                     <td>{{ $religions[$client->religion] ?? '-' }}</td>
+                    <td>{{ $client->birth_date ? \Illuminate\Support\Carbon::parse($client->birth_date)->format('d-m-Y') : '-' }}</td>
                     <td>{{ $client->whatsapp_number ?? '-' }}</td>
                     <td>{{ $client->is_active ? 'Aktif' : 'Nonaktif' }}</td>
                     <td>
