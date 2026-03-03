@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\Signal;
 use App\Models\SignalWaBlastBatch;
 use App\Models\SignalWaBlastTarget;
@@ -30,6 +31,7 @@ class SignalWaBlastPageController extends Controller
     public function index(): View
     {
         [$batchRows, $activeBatch, $targetRows] = $this->queueDashboardData();
+        $settings = $this->defaultSettings();
 
         $logs = WaBlastLog::with('admin')
             ->where('blast_type', 'general')
@@ -46,13 +48,7 @@ class SignalWaBlastPageController extends Controller
             'preview' => null,
             'selectedSignalIds' => [],
             'selectedTierId' => null,
-            'settings' => [
-                'delay_seconds' => 12,
-                'max_recipients' => 40,
-                'opening_text' => 'Halo {name}, berikut update sinyal saham kamu hari ini:',
-                'closing_text' => 'Gunakan manajemen risiko. Bukan ajakan beli/jual.',
-                'image_url' => '',
-            ],
+            'settings' => $settings,
             'logs' => $logs,
             'queueBatches' => $batchRows,
             'activeBatch' => $activeBatch,
@@ -73,6 +69,7 @@ class SignalWaBlastPageController extends Controller
                 'message' => $e->getMessage(),
             ]);
             [$batchRows, $activeBatch, $targetRows] = $this->queueDashboardData();
+            $settings = $this->defaultSettings();
 
             return view('admin.signal-wa-blast', [
                 'signals' => $this->availableSignals(),
@@ -80,13 +77,7 @@ class SignalWaBlastPageController extends Controller
                 'preview' => null,
                 'selectedSignalIds' => [],
                 'selectedTierId' => null,
-                'settings' => [
-                    'delay_seconds' => 12,
-                    'max_recipients' => 40,
-                    'opening_text' => 'Halo {name}, berikut update sinyal saham kamu hari ini:',
-                    'closing_text' => 'Gunakan manajemen risiko. Bukan ajakan beli/jual.',
-                    'image_url' => '',
-                ],
+                'settings' => $settings,
                 'logs' => WaBlastLog::with('admin')
                     ->where('blast_type', 'general')
                     ->where(function ($query) {
@@ -260,6 +251,32 @@ class SignalWaBlastPageController extends Controller
             ->with('status', "WA Blast masuk antrian. Batch #{$batch->id}, total job: {$batch->total_targets}. Proses bertahap sesuai limit tier.");
     }
 
+    public function saveSettings(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'delay_seconds' => ['nullable', 'integer', 'min:3', 'max:120'],
+            'max_recipients' => ['nullable', 'integer', 'min:1', 'max:300'],
+            'opening_text' => ['nullable', 'string', 'max:300'],
+            'closing_text' => ['nullable', 'string', 'max:300'],
+            'image_url' => ['nullable', 'url', 'max:500'],
+        ]);
+
+        $defaults = $this->defaultSettings();
+        $delay = (int) ($data['delay_seconds'] ?? $defaults['delay_seconds']);
+        $maxRecipients = (int) ($data['max_recipients'] ?? $defaults['max_recipients']);
+        $openingText = trim((string) ($data['opening_text'] ?? $defaults['opening_text']));
+        $closingText = trim((string) ($data['closing_text'] ?? $defaults['closing_text']));
+        $imageUrl = trim((string) ($data['image_url'] ?? $defaults['image_url']));
+
+        AppSetting::setValue('signal_wa_delay_seconds', (string) $delay);
+        AppSetting::setValue('signal_wa_max_recipients', (string) $maxRecipients);
+        AppSetting::setValue('signal_wa_opening_text', $openingText);
+        AppSetting::setValue('signal_wa_closing_text', $closingText);
+        AppSetting::setValue('signal_wa_image_url', $imageUrl);
+
+        return redirect()->route('signal-wa-blast.page')->with('status', 'Setting WA Blast Sinyal tersimpan.');
+    }
+
     public function resendFailed(SignalWaBlastBatch $batch): RedirectResponse
     {
         $failedCount = SignalWaBlastTarget::query()
@@ -375,11 +392,11 @@ class SignalWaBlastPageController extends Controller
         $payload = [
             'signal_ids' => array_values(array_unique(array_map('intval', $data['signal_ids']))),
             'tier_id' => isset($data['tier_id']) ? (int) $data['tier_id'] : null,
-            'delay_seconds' => (int) ($data['delay_seconds'] ?? 12),
-            'max_recipients' => (int) ($data['max_recipients'] ?? 40),
-            'opening_text' => trim((string) ($data['opening_text'] ?? 'Halo {name}, berikut update sinyal saham kamu hari ini:')),
-            'closing_text' => trim((string) ($data['closing_text'] ?? 'Gunakan manajemen risiko. Bukan ajakan beli/jual.')),
-            'image_url' => (string) ($data['image_url'] ?? ''),
+            'delay_seconds' => (int) ($data['delay_seconds'] ?? GatewaySetting::signalWaDelaySeconds()),
+            'max_recipients' => (int) ($data['max_recipients'] ?? GatewaySetting::signalWaMaxRecipients()),
+            'opening_text' => trim((string) ($data['opening_text'] ?? GatewaySetting::signalWaOpeningText())),
+            'closing_text' => trim((string) ($data['closing_text'] ?? GatewaySetting::signalWaClosingText())),
+            'image_url' => trim((string) ($data['image_url'] ?? GatewaySetting::signalWaImageUrl())),
         ];
 
         $signals = Signal::query()
@@ -517,6 +534,17 @@ class SignalWaBlastPageController extends Controller
             ->paginate(40, ['*'], 'targets_page');
 
         return [$batchRows, $activeBatch, $targetRows];
+    }
+
+    private function defaultSettings(): array
+    {
+        return [
+            'delay_seconds' => GatewaySetting::signalWaDelaySeconds(),
+            'max_recipients' => GatewaySetting::signalWaMaxRecipients(),
+            'opening_text' => GatewaySetting::signalWaOpeningText(),
+            'closing_text' => GatewaySetting::signalWaClosingText(),
+            'image_url' => GatewaySetting::signalWaImageUrl(),
+        ];
     }
 
     private function refreshBatchStats(SignalWaBlastBatch $batch): void

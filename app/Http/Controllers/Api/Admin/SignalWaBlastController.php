@@ -44,10 +44,10 @@ class SignalWaBlastController extends Controller
             return response()->json(['message' => 'Gateway Session ID belum diisi.'], 422);
         }
 
-        $delaySeconds = (int) env('SIGNAL_WA_DELAY_SECONDS', 12);
-        $maxRecipients = (int) env('SIGNAL_WA_MAX_RECIPIENTS', 40);
-        $opening = (string) env('SIGNAL_WA_OPENING', 'Halo {name}, berikut update sinyal saham kamu hari ini:');
-        $closing = (string) env('SIGNAL_WA_CLOSING', 'Gunakan manajemen risiko. Bukan ajakan beli/jual.');
+        $delaySeconds = GatewaySetting::signalWaDelaySeconds();
+        $maxRecipients = GatewaySetting::signalWaMaxRecipients();
+        $opening = GatewaySetting::signalWaOpeningText();
+        $closing = GatewaySetting::signalWaClosingText();
 
         $signals = Signal::query()
             ->with('tiers:id,name')

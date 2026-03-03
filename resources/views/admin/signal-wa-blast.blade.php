@@ -111,6 +111,7 @@
 
             <div style="margin-top:10px;">
                 <button id="btn-preview-submit" class="btn" type="submit">Preview WA Blast Sinyal</button>
+                <button class="btn btn-muted" type="submit" formaction="{{ route('signal-wa-blast.settings.save') }}" formmethod="POST">Simpan Setting WA Blast</button>
             </div>
         </form>
     </div>
