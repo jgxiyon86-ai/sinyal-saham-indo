@@ -169,6 +169,9 @@ class WaBlastPageController extends Controller
             $resolvedImageUrl = $this->storeImageAndGetUrl($request->file('image_file'));
         }
         $resolvedImageUrl = $this->normalizeOutgoingImageUrl($resolvedImageUrl);
+        if ($this->looksLikePlaceholderImageUrl($resolvedImageUrl)) {
+            $resolvedImageUrl = null;
+        }
         if (!blank($resolvedImageUrl) && str_ends_with(strtolower((string) parse_url($resolvedImageUrl, PHP_URL_HOST)), '.coi')) {
             return redirect()->route('wa-blast.page')
                 ->with('status', 'Image URL terdeteksi typo domain (.coi). Gunakan domain .com atau kosongkan URL jika pakai upload.');
@@ -371,5 +374,17 @@ class WaBlastPageController extends Controller
         }
 
         return $base.'/'.ltrim($trimmed, '/');
+    }
+
+    private function looksLikePlaceholderImageUrl(?string $url): bool
+    {
+        if (blank($url)) {
+            return false;
+        }
+
+        $path = strtolower((string) parse_url((string) $url, PHP_URL_PATH));
+        return str_ends_with($path, '/file.jpg')
+            || str_ends_with($path, '/nama_file_asli.jpg')
+            || str_ends_with($path, '/nama_file_asli.png');
     }
 }

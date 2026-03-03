@@ -18,8 +18,8 @@
                 <div><label>Nomor HP Tujuan</label><input name="whatsapp_number" value="{{ old('whatsapp_number') }}" placeholder="628xxxx" required></div>
                 <div style="grid-column:1/-1;">
                     <label>Image URL (opsional)</label>
-                    <input id="image-url-manual" name="image_url" type="url" value="{{ old('image_url') }}" placeholder="{{ rtrim(config('app.url'), '/') }}/storage/wa-manual-images/file.jpg" style="font-family:monospace;">
-                    <div style="font-size:12px;color:#4d6b8f;margin-top:4px;">Bisa Ctrl+V screenshot langsung di kolom ini. Rekomendasi: pakai upload agar URL otomatis valid.</div>
+                    <input id="image-url-manual" name="image_url" type="url" value="{{ old('image_url') }}" placeholder="Kosongkan jika kirim tanpa gambar" style="font-family:monospace;">
+                    <div id="clipboard-upload-note" style="font-size:12px;color:#4d6b8f;margin-top:4px;">Bisa Ctrl+V screenshot di mana saja pada halaman ini. URL akan terisi otomatis.</div>
                 </div>
                 <div style="grid-column:1/-1;"><label>Upload Gambar (opsional, akan override URL)</label><input id="manual-image-file" name="image_file" type="file" accept="image/*"></div>
                 <div style="grid-column:1/-1;"><label>Pesan (opsional jika ada gambar)</label><textarea name="message">{{ old('message') }}</textarea></div>
@@ -174,27 +174,35 @@
         input.value = json.url;
     }
 
-    input.addEventListener('paste', async function (e) {
+    async function handlePasteEvent(e) {
+        if (e.__waClipboardHandled) return;
         const items = e.clipboardData?.items || [];
         for (const item of items) {
             if (item.type && item.type.startsWith('image/')) {
+                e.__waClipboardHandled = true;
                 e.preventDefault();
                 const file = item.getAsFile();
                 if (!file) return;
 
                 const oldPlaceholder = input.placeholder;
+                const note = document.getElementById('clipboard-upload-note');
+                const oldNote = note ? note.textContent : '';
                 input.placeholder = 'Uploading screenshot...';
                 try {
                     await uploadClipboardImage(file);
+                    if (note) note.textContent = 'Screenshot terupload. URL gambar sudah terisi otomatis.';
                 } catch (err) {
                     alert(err.message || 'Gagal upload screenshot');
+                    if (note) note.textContent = oldNote || 'Upload screenshot gagal. Ulangi paste.';
                 } finally {
                     input.placeholder = oldPlaceholder;
                 }
                 return;
             }
         }
-    });
+    }
+
+    document.addEventListener('paste', handlePasteEvent);
 
     if (fileInput) {
         fileInput.addEventListener('change', function () {
