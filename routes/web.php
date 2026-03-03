@@ -29,8 +29,8 @@ Route::middleware(['auth', 'admin.web'])->group(function () {
     Route::post('/clients', [ClientPageController::class, 'store'])->name('clients.store');
     Route::put('/clients/{client}', [ClientPageController::class, 'update'])->name('clients.update');
     Route::post('/clients/{client}/send-credentials', [ClientPageController::class, 'sendCredentials'])->name('clients.send-credentials');
+    Route::post('/clients/{client}/toggle-active', [ClientPageController::class, 'toggleActive'])->name('clients.toggle-active');
     Route::delete('/clients/{client}', [ClientPageController::class, 'destroy'])->name('clients.destroy');
-    Route::post('/clients/import', [ClientPageController::class, 'import'])->name('clients.import');
 
     Route::get('/tiers', [TierPageController::class, 'index'])->name('tiers.page');
     Route::get('/tiers/create', [TierPageController::class, 'create'])->name('tiers.create');

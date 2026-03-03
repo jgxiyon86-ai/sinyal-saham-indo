@@ -7,6 +7,23 @@
     <p style="margin:0 0 14px;color:#4d6b8f;">Tampilan list untuk data besar. Form dipisah ke halaman lain.</p>
 
     <div class="panel">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+            <div style="background:#fff;border:1px solid #d5e6fb;border-radius:10px;padding:12px;">
+                <div style="font-size:12px;color:#4d6b8f;">Total Klient</div>
+                <div style="font-size:20px;font-weight:700;">{{ number_format((int) ($summary['total'] ?? 0), 0, ',', '.') }}</div>
+            </div>
+            <div style="background:#ecfdf3;border:1px solid #9de7bf;border-radius:10px;padding:12px;">
+                <div style="font-size:12px;color:#166534;">Klient Aktif</div>
+                <div style="font-size:20px;font-weight:700;color:#166534;">{{ number_format((int) ($summary['active'] ?? 0), 0, ',', '.') }}</div>
+            </div>
+            <div style="background:#fff8e1;border:1px solid #f6dd8f;border-radius:10px;padding:12px;">
+                <div style="font-size:12px;color:#8a5b00;">Klient Nonaktif</div>
+                <div style="font-size:20px;font-weight:700;color:#8a5b00;">{{ number_format((int) ($summary['inactive'] ?? 0), 0, ',', '.') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
         <form method="GET" action="{{ route('clients.page') }}">
             <div class="field-grid">
                 <div><label>Cari</label><input name="q" value="{{ request('q') }}" placeholder="IDCUST, nama, email, no HP"></div>
@@ -45,23 +62,6 @@
         </form>
     </div>
 
-    <div class="panel" style="margin-top:12px;">
-        <form method="POST" action="{{ route('clients.import') }}" enctype="multipart/form-data">
-            @csrf
-            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:end;">
-                <div style="min-width:300px;flex:1;">
-                    <label>Import Klient (XLSX/CSV)</label>
-                    <input type="file" name="client_import_file" accept=".xlsx,.csv,.txt" required>
-                </div>
-                <button class="btn" type="submit">Import 3000 Klient</button>
-            </div>
-            <div style="margin-top:8px;color:#4d6b8f;">
-                Format kolom wajib: <strong>IDCUST | Full nama klient | HP | Birthdate | saldo</strong>.
-                <br>Import akan update data lama jika <strong>IDCUST</strong> atau <strong>HP</strong> sudah ada.
-            </div>
-        </form>
-    </div>
-
     <div class="table-wrap">
         <table>
             <thead>
@@ -83,6 +83,13 @@
                     <td>
                         <div class="actions">
                             <a class="btn btn-muted" href="{{ route('clients.edit', $client) }}" style="text-decoration:none;">Edit</a>
+                            <form method="POST" action="{{ route('clients.toggle-active', $client) }}" onsubmit="return confirm('{{ $client->is_active ? 'Nonaktifkan klient ini? Klient tidak akan menerima WA/sinyal aplikasi.' : 'Aktifkan kembali klient ini?' }}')">
+                                @csrf
+                                <input type="hidden" name="is_active" value="{{ $client->is_active ? 0 : 1 }}">
+                                <button class="btn {{ $client->is_active ? 'btn-danger' : '' }}" type="submit">
+                                    {{ $client->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                </button>
+                            </form>
                             <form method="POST" action="{{ route('clients.send-credentials', $client) }}" onsubmit="return confirm('Kirim password baru ke email klient ini?')">
                                 @csrf
                                 <button class="btn" type="submit">Kirim Kredensial</button>
@@ -101,5 +108,24 @@
             </tbody>
         </table>
     </div>
-    <div class="pagination">{{ $clients->links() }}</div>
+    <div class="pagination" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div style="font-size:13px;color:#4d6b8f;">
+            Showing {{ $clients->firstItem() ?? 0 }} to {{ $clients->lastItem() ?? 0 }} of {{ $clients->total() }} results
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            @if ($clients->onFirstPage())
+                <span class="btn btn-muted" style="opacity:.6;cursor:not-allowed;">Previous</span>
+            @else
+                <a class="btn btn-muted" href="{{ $clients->previousPageUrl() }}" style="text-decoration:none;">Previous</a>
+            @endif
+
+            <span style="font-size:13px;color:#4d6b8f;">Page {{ $clients->currentPage() }} / {{ $clients->lastPage() }}</span>
+
+            @if ($clients->hasMorePages())
+                <a class="btn btn-muted" href="{{ $clients->nextPageUrl() }}" style="text-decoration:none;">Next</a>
+            @else
+                <span class="btn btn-muted" style="opacity:.6;cursor:not-allowed;">Next</span>
+            @endif
+        </div>
+    </div>
 @endsection

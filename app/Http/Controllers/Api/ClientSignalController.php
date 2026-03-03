@@ -19,6 +19,13 @@ class ClientSignalController extends Controller
             ], 403);
         }
 
+        if (! (bool) $user->is_active) {
+            return response()->json([
+                'signals' => [],
+                'message' => 'Akun klient nonaktif. Hubungi admin.',
+            ], 403);
+        }
+
         if (! $user->tier_id) {
             return response()->json([
                 'signals' => [],
